@@ -11,6 +11,7 @@
       "generator": "secret"
     }
   },
+
   "environments": {
     "test": {
       "scripts": {
