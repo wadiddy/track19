@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
+from . import models
 from .models import Greeting
 
 def index(request):
@@ -9,7 +10,9 @@ def index(request):
 
 def here(request):
     # return HttpResponse('Hello from Python!')
-    return render(request, "here.html")
+    return render(request, "here.html", context={
+        "location_count": models.Location.objects.count()
+    })
 
 
 def db(request):
