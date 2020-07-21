@@ -15,7 +15,8 @@ import covidtracker.views
 # Learn more here: https://docs.djangoproject.com/en/2.1/topics/http/urls/
 
 urlpatterns = [
-    path("", covidtracker.views.index, name="index"),
-    path("db/", covidtracker.views.db, name="db"),
-    path("admin/", admin.site.urls),
+    path("", covidtracker.views.here, name="here"),
+    path("test/here", covidtracker.views.here, name="here"),
+    # path("db/", covidtracker.views.db, name="db"),
+    # path("admin/", admin.site.urls),
 ]
