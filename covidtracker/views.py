@@ -6,6 +6,6 @@ from . import models
 def index_page(request):
     # return HttpResponse('Hello from Python!')
     return render(request, "here.html", context={
-        "location_count": models.Location.objects.count()
+        "location_count": models.LocationDayData.objects.count()
     })
 
