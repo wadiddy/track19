@@ -1,179 +1,3 @@
-CASES_COLS = {
-    "county": 0,
-    "totalcountconfirmed": 1,
-    "totalcountdeaths": 2,
-    "newcountconfirmed": 3,
-    "newcountdeaths": 4,
-    "date": 5
-}
-
-HOSPITALS_COLS = {
-    "county": 0,
-    "date": 1,
-    "hospitalized_covid_confirmed_patients": 2,
-    "hospitalized_suspected_covid_patients": 3,
-    "hospitalized_covid_patients": 4,
-    "all_hospital_beds": 5,
-    "icu_covid_confirmed_patients": 6,
-    "icu_suspected_covid_patients": 7,
-    "icu_available_beds": 8,
-}
-
-USA_COLS = {
-    "date": 0,
-    "state": 1,
-    "positive": 2,
-    "negative": 3,
-    "pending": 4,
-    "hospitalizedCurrently": 5,
-    "hospitalizedCumulative": 6,
-    "inIcuCurrently": 7,
-    "inIcuCumulative": 8,
-    "onVentilatorCurrently": 9,
-    "onVentilatorCumulative": 10,
-    "recovered": 11,
-    "dataQualityGrade": 12,
-    "lastUpdateEt": 13,
-    "dateModified": 14,
-    "checkTimeEt": 15,
-    "death": 16,
-    "hospitalized": 17,
-    "dateChecked": 18,
-    "totalTestsViral": 19,
-    "positiveTestsViral": 20,
-    "negativeTestsViral": 21,
-    "positiveCasesViral": 22,
-    "deathConfirmed": 23,
-    "deathProbable": 24,
-    "fips": 25,
-    "positiveIncrease": 26,
-    "negativeIncrease": 27,
-    "total": 28,
-    "totalTestResults": 29,
-    "totalTestResultsIncrease": 30,
-    "posNeg": 31,
-    "deathIncrease": 32,
-    "hospitalizedIncrease": 33,
-    "hash": 34,
-    "commercialScore": 35,
-    "negativeRegularScore": 36,
-    "negativeScore": 37,
-    "positiveScore": 38,
-    "score": 39,
-    "grade": 40,
-}
-
-LOCATION_POPULATION = {
-    'AK': 731545,
-    'AL': 4903185,
-    'AR': 3017804,
-    'AZ': 7278717,
-    'CA': 39512223,
-    'CA: Alameda County': 1671329,
-    'CA: Alpine County': 1129,
-    'CA: Amador County': 39752,
-    'CA: Butte County': 219186,
-    'CA: Calaveras County': 45905,
-    'CA: Colusa County': 21547,
-    'CA: Contra Costa County': 1153526,
-    'CA: Del Norte County': 27812,
-    'CA: El Dorado County': 192843,
-    'CA: Fresno County': 999101,
-    'CA: Glenn County': 28393,
-    'CA: Humboldt County': 135558,
-    'CA: Imperial County': 181215,
-    'CA: Inyo County': 18039,
-    'CA: Kern County': 900202,
-    'CA: Kings County': 152940,
-    'CA: Lake County': 64386,
-    'CA: Lassen County': 30573,
-    'CA: Los Angeles County': 10039107,
-    'CA: Madera County': 157327,
-    'CA: Marin County': 258826,
-    'CA: Mariposa County': 17203,
-    'CA: Mendocino County': 86749,
-    'CA: Merced County': 277680,
-    'CA: Modoc County': 8841,
-    'CA: Mono County': 14444,
-    'CA: Monterey County': 434061,
-    'CA: Napa County': 137744,
-    'CA: Nevada County': 99755,
-    'CA: Orange County': 3175692,
-    'CA: Placer County': 398329,
-    'CA: Plumas County': 18807,
-    'CA: Riverside County': 2470546,
-    'CA: Sacramento County': 1552058,
-    'CA: San Benito County': 62808,
-    'CA: San Bernardino County': 2180085,
-    'CA: San Diego County': 3338330,
-    'CA: San Francisco County': 881549,
-    'CA: San Joaquin County': 762148,
-    'CA: San Luis Obispo County': 283111,
-    'CA: San Mateo County': 766573,
-    'CA: Santa Barbara County': 446499,
-    'CA: Santa Clara County': 1927852,
-    'CA: Santa Cruz County': 273213,
-    'CA: Shasta County': 180080,
-    'CA: Sierra County': 3005,
-    'CA: Siskiyou County': 43539,
-    'CA: Solano County': 447643,
-    'CA: Sonoma County': 494336,
-    'CA: Stanislaus County': 550660,
-    'CA: Sutter County': 96971,
-    'CA: Tehama County': 65084,
-    'CA: Trinity County': 12285,
-    'CA: Tulare County': 466195,
-    'CA: Tuolumne County': 54478,
-    'CA: Ventura County': 846006,
-    'CA: Yolo County': 220500,
-    'CA: Yuba County': 78668,
-    'CO': 5758736,
-    'CT': 3565287,
-    'DC': 705749,
-    'DE': 973764,
-    'FL': 21477737,
-    'GA': 10617423,
-    'HI': 1415872,
-    'IA': 3155070,
-    'ID': 1787065,
-    'IL': 12671821,
-    'IN': 6732219,
-    'KS': 2913314,
-    'KY': 4467673,
-    'LA': 4648794,
-    'MA': 6892503,
-    'MD': 6045680,
-    'ME': 1344212,
-    'MI': 9986857,
-    'MN': 5639632,
-    'MO': 6137428,
-    'MS': 2976149,
-    'MT': 1068778,
-    'NC': 10488084,
-    'ND': 762062,
-    'NE': 1934408,
-    'NH': 1359711,
-    'NJ': 8882190,
-    'NM': 2096829,
-    'NV': 3080156,
-    'NY': 19453561,
-    'OH': 11689100,
-    'OK': 3956971,
-    'OR': 4217737,
-    'PA': 12801989,
-    'RI': 1059361,
-    'SC': 5148714,
-    'SD': 884659,
-    'TN': 6829174,
-    'TX': 28995881,
-    'UT': 3205958,
-    'VA': 8535519,
-    'VT': 623989,
-    'WA': 7614893,
-    'WI': 5822434,
-    'WV': 1792147,
-    'WY': 578759,
-}
 
 CAUSEOFDEATH_USYEARLYDEATHS = {
     "Any": 2813503,
@@ -192,23 +16,23 @@ CAUSEOFDEATH_USYEARLYDEATHS = {
     "Alcohol": 88000
 }
 
-def get_usa_population():
-    from covidtracker import models
-    usa_pop = 0
-    for l in models.Location.objects.all():
-        if len(l.token) == 2:
-            usa_pop += l.population
-    return usa_pop
+COLMAP_CA_CASES = {
+    "county": 0,
+    "totalcountconfirmed": 1,
+    "totalcountdeaths": 2,
+    "newcountconfirmed": 3,
+    "newcountdeaths": 4,
+    "date": 5
+}
 
-def add_to_db():
-    from covidtracker import models
-
-    for loc, pop in LOCATION_POPULATION.items():
-        try:
-            loc_model = models.Location.objects.get(token=loc)
-            loc_model.population = pop
-            loc_model.save()
-        except models.Location.DoesNotExist:
-            models.Location(token=loc, population=pop).save()
-
-
+COLMAP_CA_HOSPITALS = {
+    "county": 0,
+    "date": 1,
+    "hospitalized_covid_confirmed_patients": 2,
+    "hospitalized_suspected_covid_patients": 3,
+    "hospitalized_covid_patients": 4,
+    "all_hospital_beds": 5,
+    "icu_covid_confirmed_patients": 6,
+    "icu_suspected_covid_patients": 7,
+    "icu_available_beds": 8,
+}
