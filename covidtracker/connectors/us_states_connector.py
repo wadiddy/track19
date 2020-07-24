@@ -19,8 +19,8 @@ class UsaConnector(BaseConnector):
         return models.LocationDayData(
             location=location,
             date=date,
-            positive=get_safe_number(row['positive']),
-            total_tests=get_safe_number(row['positive'] + row['negative']),
+            positive=get_safe_number(row['positiveIncrease']),
+            total_tests=get_safe_number(row['totalTestResultsIncrease']),
             deaths=get_safe_number(row['deathIncrease']),
             on_ventilator=get_safe_number(row['onVentilatorCurrently']),
             in_hospital=get_safe_number(row['hospitalizedCurrently']),

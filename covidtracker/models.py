@@ -9,6 +9,15 @@ def auto_str(cls):
     cls.__str__ = __str__
     return cls
 
+class LocationGroup(models.Model):
+    token = models.TextField(primary_key=True)
+    name = models.TextField()
+
+
+class LocationGroupLocation(models.Model):
+    location_group = models.ForeignKey("LocationGroup", on_delete=models.DO_NOTHING)
+    location = models.ForeignKey("Location", on_delete=models.DO_NOTHING)
+
 
 @auto_str
 class Location(models.Model):
