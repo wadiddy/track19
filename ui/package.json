@@ -1,11 +1,11 @@
 {
-    "title": "SB Admin 2",
-    "name": "startbootstrap-sb-admin-2",
-    "version": "4.1.1",
+    "title": "Tracker 19",
+    "name": "tracker-19",
+    "version": "1.0.0",
     "scripts": {
         "start": "node_modules/.bin/gulp watch"
     },
-    "description": "An open source Bootstrap 4 admin theme.",
+    "description": "Covid Tracker.",
     "keywords": [
         "css",
         "sass",
@@ -16,19 +16,13 @@
         "admin",
         "app"
     ],
-    "homepage": "https://startbootstrap.com/themes/sb-admin-2",
-    "bugs": {
-        "url": "https://github.com/StartBootstrap/startbootstrap-sb-admin-2/issues",
-        "email": "feedback@startbootstrap.com"
-    },
+    "homepage": "https://https://jjscovidtracker.herokuapp.com/",
     "license": "MIT",
-    "author": "Start Bootstrap",
-    "contributors": [
-        "David Miller (http://davidmiller.io/)"
-    ],
+    "author": "JJ Schultz",
+    "contributors": [],
     "repository": {
         "type": "git",
-        "url": "https://github.com/StartBootstrap/startbootstrap-sb-admin-2.git"
+        "url": "https://github.com/jjschultz/covidtracker"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "5.13.1",
@@ -39,7 +33,7 @@
         "jquery": "3.5.1",
         "jquery.easing": "^1.4.1",
         "source": "0.0.3",
-        "typeahead": "0.2.2",
+        "underscore": "1.10.2",
         "vinyl-source-stream": "2.0.0"
     },
     "devDependencies": {
@@ -48,6 +42,7 @@
         "gulp": "4.0.2",
         "gulp-autoprefixer": "7.0.1",
         "gulp-clean-css": "4.3.0",
+        "gulp-concat": "2.6.1",
         "gulp-header": "2.0.9",
         "gulp-plumber": "^1.2.1",
         "gulp-rename": "2.0.0",

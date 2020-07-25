@@ -18,10 +18,14 @@ def index_page(request):
 		"latest_date": common.get_date(request.GET, 'date_to'),
 	}
 
+	chart_data = build_chart_data(request)
 	return render(request, "index.html", context={
+		"chart_data": chart_data,
+		"chart_data_json": json.dumps(chart_data),
 		"page_model": json.dumps(page_model),
 		"last_updated": models.LocationDayData.objects.all().order_by("-date")[0].date,
-		"avail_attributes": get_attr_labelvalues()
+		"avail_attributes": get_attr_labelvalues(),
+		"avail_locations": get_locations()
 	})
 
 
@@ -30,54 +34,28 @@ def api_vi_attributes(request):
 	return send_api_response(get_attr_labelvalues())
 
 
-def get_attr_labelvalues():
-	return [
-		{"label": datamodeling_service.QUERYABLE_ATTR_LABELS[a], "value": a}
-		for a in datamodeling_service.QUERYABLE_ATTRS
-	]
-
-
 @cache_page(60 * 5)
 def api_vi_locations(request):
-	locations = []
+	return send_api_response(get_locations())
 
-	for lg in models.LocationGroup.objects.all():
-		group_population = 0
-		for l in models.Location.objects.filter(pk__in=[lgl.location_id for lgl in lg.locationgrouplocation_set.all()]):
-			group_population += l.population
-		locations.append({
-			"type": "location_group",
-			"token": lg.token,
-			"name": lg.name,
-			"population": group_population
-		})
-
-	for l in models.Location.objects.all():
-		locations.append({
-			"type": "location",
-			"token": l.token,
-			"name": l.token,
-			"population": l.population
-		})
-
-	return send_api_response(locations)
 
 
 @cache_page(60 * 5)
 def api_vi_fetch(request):
-	rolling_average_size = common.get(request.GET, 'ravg', 14)
-	earliest_date = common.get_date(request.GET, 'date_to')
-	latest_date = common.get_date(request.GET, 'date_from')
-	series_list = []
+	return send_api_response(build_chart_data(request))
 
+
+def build_chart_data(request):
+	rolling_average_size = common.get(request.GET, 'ravg', 14)
+	earliest_date = common.get_date(request.GET, 'date_from', '2020-05-01')
+	latest_date = common.get_date(request.GET, 'date_to')
+	series_list = []
 	attr_list = request.GET.getlist("attr")
 	if len(attr_list) == 0:
 		attr_list = [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
-
 	loc_tokens_list = request.GET.getlist("loc")
 	if len(loc_tokens_list) == 0:
 		loc_tokens_list = ["USA"]
-
 	for loc_tokens in loc_tokens_list:
 		location_tokens = []
 		location_names = []
@@ -142,8 +120,7 @@ def api_vi_fetch(request):
 					)
 				}
 			)
-
-	return send_api_response(series_list)
+	return series_list
 
 
 def send_api_response(payload):
@@ -152,3 +129,35 @@ def send_api_response(payload):
 		'api_version': 1,
 		'payload': payload,
 	}, encoder=MyJSONEncoder)
+
+
+def get_locations():
+	locations = []
+	for lg in models.LocationGroup.objects.all():
+		group_population = 0
+		for l in models.Location.objects.filter(pk__in=[lgl.location_id for lgl in lg.locationgrouplocation_set.all()]):
+			group_population += l.population
+		locations.append({
+			"type": "location_group",
+			"token": lg.token,
+			"name": lg.name,
+			"population": group_population
+		})
+
+	for l in models.Location.objects.all():
+		locations.append({
+			"type": "location",
+			"token": l.token,
+			"name": l.token,
+			"population": l.population
+		})
+
+	return locations
+
+def get_attr_labelvalues():
+	return [
+		{"label": datamodeling_service.QUERYABLE_ATTR_LABELS[a], "value": a}
+		for a in datamodeling_service.QUERYABLE_ATTRS
+	]
+
+
