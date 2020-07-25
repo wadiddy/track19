@@ -16,4 +16,7 @@ import covidtracker.views
 
 urlpatterns = [
     path("", covidtracker.views.index_page, name="index_page"),
+    path("api/v1/fetch", covidtracker.views.api_vi_fetch, name="api_vi_fetch"),
+    path("api/v1/locations", covidtracker.views.api_vi_locations, name="api_vi_locations"),
+    path("api/v1/attributes", covidtracker.views.api_vi_attributes, name="api_vi_attributes"),
 ]

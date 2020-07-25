@@ -4,3 +4,4 @@ django-heroku
 dateparser
 urllib3
 pandas
+django-gulp
