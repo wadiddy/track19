@@ -35,7 +35,6 @@ GULP_CWD="%s/ui" % BASE_DIR
 # Application definition
 
 INSTALLED_APPS = [
-    'django_gulp',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
