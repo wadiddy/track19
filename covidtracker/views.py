@@ -10,6 +10,7 @@ from .common import MyJSONEncoder
 
 
 def index_page(request):
+	print("1111111111")
 	page_model = {
 		"locations": request.GET.getlist("loc"),
 		"attributes": request.GET.getlist("attr"),
@@ -17,16 +18,23 @@ def index_page(request):
 		"earliest_date": common.get_date(request.GET, 'date_from'),
 		"latest_date": common.get_date(request.GET, 'date_to'),
 	}
+	print("22222222")
 
 	chart_data = build_chart_data(request)
-	return render(request, "index.html", context={
+	print("333333333")
+	ctx = {
 		"chart_data": chart_data,
 		"chart_data_json": json.dumps(chart_data),
 		"page_model": json.dumps(page_model),
 		"last_updated": models.LocationDayData.objects.all().order_by("-date")[0].date,
 		"avail_attributes": get_attr_labelvalues(),
 		"avail_locations": get_locations()
-	})
+	}
+	print("44444444444444")
+	rendered_response = render(request, "index.html", context=ctx)
+	print("5555555555555")
+
+	return rendered_response
 
 
 @cache_page(60 * 5)

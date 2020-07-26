@@ -17,6 +17,9 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.github" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/covidtracker/static/css" />
+      <excludeFolder url="file://$MODULE_DIR$/covidtracker/static/js" />
+      <excludeFolder url="file://$MODULE_DIR$/covidtracker/static/vendor" />
       <excludeFolder url="file://$MODULE_DIR$/env" />
       <excludeFolder url="file://$MODULE_DIR$/ui/node_modules" />
       <excludeFolder url="file://$MODULE_DIR$/ui/vendor" />
