@@ -1,14 +1,10 @@
-local_settings.py
+ocal_settings.py
 venv
 *.pyc
-staticfiles
 staticfiles
 .env
 db.sqlite3
 getting-started/*
 /env/
 /.idea/
-/covidtracker/static/css/
-/covidtracker/static/js/
-/covidtracker/static/vendor/
 /ui/node_modules/
