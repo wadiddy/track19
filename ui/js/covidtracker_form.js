@@ -1,15 +1,73 @@
-function covid_tracker_form(page_model, avail_locations) {
-    $(".dropdown-item-attribute").click(function (ev) {
-        $("button", $(ev.target).closest(".dropdown")).text($(ev.target).text());
-
-        let attribute = $(ev.target).attr("value");
-        page_model.attributes = [attribute];
-        // if ($.inArray(page_model.attributes, attribute) < 0) {
-        //     page_model.attributes.push(attribute);
-        // }
-
-        update_page();
+function covid_tracker_form(page_model, avail_locations, avail_attributes) {
+    const map_location_token_name = {}
+    avail_locations.forEach(function (l) {
+        map_location_token_name[l.token] = l.name;
     });
+
+    const map_attribute_label_value = {}
+    avail_attributes.forEach(function (a) {
+        map_attribute_label_value[a.value] = a.label;
+    });
+
+    $('#global_configuration_modal')
+        .on('click', '.btn-primary', function(ev){
+            page_model.rolling_average_size = $('#global_configuration_modal #inp_rolling_average_size').val();
+            page_model.earliest_date = $('#global_configuration_modal #inp_earliest_date').val();
+            page_model.latest_date = $('#global_configuration_modal #inp_latest_date').val();
+            update_page();
+            return false;
+        })
+    ;
+
+    $('#chart_configuration_modal')
+        .on('show.bs.modal', function (ev) {
+            let button = $(ev.relatedTarget);
+            if (isNaN(button.data('chart_index'))) {
+                $("#chart_configuration_modal .modal-title").text("Add a new Chart");
+            } else {
+                $("#chart_configuration_modal .modal-title").text("Edit Chart");
+            }
+
+            let chart_data = page_model.charts[button.data('chart_index')];
+            if (!chart_data) {
+                chart_data = {
+                    "name": null,
+                    "locations": [],
+                    "attributes": [],
+                }
+                page_model.charts.push(chart_data);
+            }
+
+            $('#chart_configuration_modal').data("chart_data", chart_data);
+            paint_modal_with_chart_data();
+        })
+        .on('click', '.btn-primary', function(ev){
+            update_page();
+            return false;
+        })
+        .on('click', '.a_remove_attribute', function (ev) {
+            let attribute_token = $(ev.target).closest("li").data('attribute_token');
+            let chart_data = $('#chart_configuration_modal').data("chart_data");
+            chart_data.attributes = chart_data.attributes.filter(function (at) {
+                return at !== attribute_token;
+            });
+            paint_modal_with_chart_data();
+        })
+        .on('click', '.a_remove_location', function (ev) {
+            let location_token = $(ev.target).closest("li").data('location_token');
+            let chart_data = $('#chart_configuration_modal').data("chart_data");
+            chart_data.locations = chart_data.locations.filter(function (lt) {
+                return lt !== location_token;
+            });
+            paint_modal_with_chart_data();
+        });
+
+    $("#btn_add_metric").on("click", ".dropdown-item", function (ev) {
+        let chart_data = $('#chart_configuration_modal').data("chart_data");
+        chart_data.attributes.push($(ev.target).attr("value"));
+        paint_modal_with_chart_data();
+    });
+
 
     $(".location-selector")
         .typeahead({
@@ -30,23 +88,36 @@ function covid_tracker_form(page_model, avail_locations) {
                 }
             })
         .bind('typeahead:select', function (ev, suggestion) {
-            let location_token = map_location_label_id[suggestion];
-            page_model.locations = [location_token];
-            // if ($.inArray(page_model.locations, location_token) < 0) {
-            //     page_model.locations.push(location_token);
-            // }
-            update_page();
+            let chart_data = $(ev.target).closest(".modal").data("chart_data");
+            chart_data.locations.push(map_location_label_id[suggestion]);
+            $('.location-selector').typeahead('val', '');
+
+            paint_modal_with_chart_data();
         })
     ;
 
+    function paint_modal_with_chart_data() {
+        let chart_data = $('#chart_configuration_modal').data("chart_data");
+
+        let locations_container = $("#chart_configuration_modal .div_modal_locations_container");
+        locations_container.empty();
+        [...new Set(chart_data.locations)].sort().forEach(function (location_token) {
+            let location_name = map_location_token_name[location_token]
+
+            locations_container.append("<li data-location_token='" + location_token + "' class='small text-gray-700'>" + location_name + "&nbsp;(<a class='a_remove_location' title='Remove Location' href='#'>x</a>)</li>");
+        });
+
+        let attributes_contianer = $("#chart_configuration_modal .div_modal_attributes_container");
+        attributes_contianer.empty();
+        [...new Set(chart_data.attributes)].sort().forEach(function (attribute_token) {
+            let attribute_name = map_attribute_label_value[attribute_token]
+            attributes_contianer.append("<li data-attribute_token='" + attribute_token + "' class='small text-gray-700'>" + attribute_name + "&nbsp;(<a class='a_remove_attribute' title='Remove Metric' href='#'>x</a>)</li>");
+        });
+
+    }
+
     function update_page() {
         let qs_parts = [];
-        qs_parts = qs_parts.concat(page_model.locations.map(function (l) {
-            return "loc=" + l;
-        }));
-        qs_parts = qs_parts.concat(page_model.attributes.map(function (a) {
-            return "attr=" + a;
-        }));
 
         if (page_model.rolling_average_size) {
             qs_parts.push("ravg=" + page_model.rolling_average_size);
@@ -59,6 +130,20 @@ function covid_tracker_form(page_model, avail_locations) {
         if (page_model.latest_date) {
             qs_parts.push("date_to=" + page_model.latest_date);
         }
+
+        page_model.charts.forEach(function(chart_data, idx){
+            let suffix = idx === 0 ? "" : "" + idx;
+
+            if (chart_data.name){
+                qs_parts.push("name" + suffix + "=" + chart_data.name);
+            }
+            chart_data.locations.forEach(function(l){
+                qs_parts.push("loc" + suffix + "=" + l);
+            });
+            chart_data.attributes.forEach(function(a){
+                qs_parts.push("attr" + suffix + "=" + a);
+            });
+        });
 
         window.location = "/?" + qs_parts.join("&");
     }

@@ -18,3 +18,18 @@
 @import "login.scss";
 @import "error.scss";
 @import "footer.scss";
+
+.tt-menu{
+  margin-top: 5px;
+  padding: 10px;
+  background-color: $white;
+  min-width: 250px;
+
+  .tt-selectable{
+    cursor: default;
+  }
+  .tt-selectable:hover{
+    text-decoration: underline;
+  }
+
+}

@@ -1,17 +1,52 @@
-function covid_tracker_chart(charts_container, chart_data) {
+const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000'];
+    function covid_tracker_chart(charts_container, chart_datas) {
     // Set new default font family and font color to mimic Bootstrap's default styling
     Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
     Chart.defaults.global.defaultFontColor = '#858796';
     Chart.defaults.global.animation.duration = 0;
 
-    chart_data.forEach(function (covid_chart, idx) {
+    if (chart_datas.length == 0) {
+        $('#chart_configuration_modal').modal('show');
+        return
+    }
 
-        var labels = []
-        var values = []
-        for (k in covid_chart.data){
-            labels.push(k);
-            values.push(covid_chart.data[k]);
+    var labels = []
+
+    chart_datas.forEach(function (chart_data, idx) {
+        if (chart_data.series_list.length === 0){
+            return;
         }
+
+        let labels = [];
+        for (k in chart_data.series_list[0].data) {
+            labels.push(k);
+        }
+
+        let datasets = chart_data.series_list.map(function (series_data, idx) {
+            var values = []
+            for (k in series_data.data) {
+                values.push(series_data.data[k]);
+            }
+
+            let c = COLORS[idx];
+
+            return {
+                label: series_data.name,
+                lineTension: 0.3,
+                backgroundColor: "rgba(78, 115, 223, 0.05)",
+                borderColor: c,
+                pointRadius: 3,
+                pointBackgroundColor: c,
+                pointBorderColor: c,
+                pointHoverRadius: 3,
+                pointHoverBackgroundColor: c,
+                pointHoverBorderColor: c,
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                data: values
+            }
+        });
+
 
         let canvas = $("#chart_canvas_" + idx)[0];
 
@@ -19,21 +54,7 @@ function covid_tracker_chart(charts_container, chart_data) {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: covid_chart.name,
-                    lineTension: 0.3,
-                    backgroundColor: "rgba(78, 115, 223, 0.05)",
-                    borderColor: "rgba(78, 115, 223, 1)",
-                    pointRadius: 3,
-                    pointBackgroundColor: "rgba(78, 115, 223, 1)",
-                    pointBorderColor: "rgba(78, 115, 223, 1)",
-                    pointHoverRadius: 3,
-                    pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-                    pointHoverBorderColor: "rgba(78, 115, 223, 1)",
-                    pointHitRadius: 10,
-                    pointBorderWidth: 2,
-                    data: values
-                }],
+                datasets: datasets,
             },
             options: {
                 responsive: true,
@@ -79,7 +100,7 @@ function covid_tracker_chart(charts_container, chart_data) {
                     }],
                 },
                 legend: {
-                    display: false
+                    display: true
                 },
                 tooltips: {
                     backgroundColor: "rgb(255,255,255)",

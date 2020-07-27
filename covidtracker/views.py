@@ -1,4 +1,5 @@
 import json
+import pprint
 
 import dateparser
 from django.http import JsonResponse
@@ -10,31 +11,49 @@ from .common import MyJSONEncoder
 
 
 def index_page(request):
-	print("1111111111")
-	page_model = {
-		"locations": request.GET.getlist("loc"),
-		"attributes": request.GET.getlist("attr"),
-		"rolling_average_size": common.get(request.GET, 'ravg'),
-		"earliest_date": common.get_date(request.GET, 'date_from'),
-		"latest_date": common.get_date(request.GET, 'date_to'),
-	}
-	print("22222222")
+	page_model = build_page_model(request, default_chart={
+		"name": None,
+		"locations": ["USA"],
+		"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
+	})
+	chart_data = build_chart_data(page_model)
 
-	chart_data = build_chart_data(request)
-	print("333333333")
 	ctx = {
 		"chart_data": chart_data,
 		"chart_data_json": json.dumps(chart_data),
-		"page_model": json.dumps(page_model),
+		"page_model": page_model,
+		"page_model_json": json.dumps(page_model),
 		"last_updated": models.LocationDayData.objects.all().order_by("-date")[0].date,
 		"avail_attributes": get_attr_labelvalues(),
 		"avail_locations": get_locations()
 	}
-	print("44444444444444")
-	rendered_response = render(request, "index.html", context=ctx)
-	print("5555555555555")
+	return render(request, "index.html", context=ctx)
 
-	return rendered_response
+
+def build_page_model(request, default_chart=None):
+	page_model = {
+		"rolling_average_size": common.get_int(request.GET, 'ravg', '14'),
+		"earliest_date": common.get_date_key(common.get_date(request.GET, 'date_from', '2020-05-01')),
+		"latest_date": common.get_date_key(common.get_date(request.GET, 'date_to')),
+		"charts": []
+	}
+
+	all_location_tokens = [l['token'] for l in get_locations()]
+	for i in range(10):
+		suffix = "" if i == 0 else str(i)
+		locations = [l for l in request.GET.getlist("loc" + suffix) if l in all_location_tokens]
+		attributes = [a for a in request.GET.getlist("attr" + suffix) if a in datamodeling_service.QUERYABLE_ATTRS]
+		if len(locations) > 0 and len(attributes) > 0:
+			page_model['charts'].append({
+				"name": common.get(request.GET, "name" + suffix),
+				"locations": locations,
+				"attributes": attributes,
+			})
+
+	if len(page_model['charts']) == 0 and default_chart is not None:
+		page_model['charts'].append(default_chart)
+
+	return page_model
 
 
 @cache_page(60 * 5)
@@ -47,88 +66,94 @@ def api_vi_locations(request):
 	return send_api_response(get_locations())
 
 
-
 @cache_page(60 * 5)
 def api_vi_fetch(request):
-	return send_api_response(build_chart_data(request))
+	return send_api_response(
+		build_chart_data(
+			build_page_model(request)
+		)
+	)
 
 
-def build_chart_data(request):
-	rolling_average_size = common.get(request.GET, 'ravg', 14)
-	earliest_date = common.get_date(request.GET, 'date_from', '2020-05-01')
-	latest_date = common.get_date(request.GET, 'date_to')
-	series_list = []
-	attr_list = request.GET.getlist("attr")
-	if len(attr_list) == 0:
-		attr_list = [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
-	loc_tokens_list = request.GET.getlist("loc")
-	if len(loc_tokens_list) == 0:
-		loc_tokens_list = ["USA"]
-	for loc_tokens in loc_tokens_list:
-		location_tokens = []
-		location_names = []
-		for lt in loc_tokens.split("~"):
-			try:
-				location_group = models.LocationGroup.objects.get(token=lt)
-				location_names.append(location_group.name)
-				location_tokens += [lgl.location_id for lgl in location_group.locationgrouplocation_set.all()]
-			except:
-				location_tokens.append(lt)
-				location_names.append(lt)
+def build_chart_data(page_model):
+	rolling_average_size = page_model['rolling_average_size']
+	earliest_date = common.parse_date(page_model['earliest_date'])
+	latest_date = common.parse_date(page_model['latest_date'])
 
-		print("location_tokens", location_tokens)
-		locations = list(models.Location.objects.filter(token__in=location_tokens))
-		total_population = sum([l.population for l in locations]) if len(locations) > 0 else 0
-		for attr in attr_list:
-			if attr not in datamodeling_service.QUERYABLE_ATTRS:
-				continue
+	chart_list = []
+	for chart_meta in page_model['charts']:
+		chart_data = {
+			"series_list": []
+		}
+		series_list = chart_data["series_list"]
+		chart_list.append(chart_data)
 
-			attr_label = attr.replace("_", " ").title()
-			scalar = common.get(constants.ATTR_SCALAR, attr, 1)
-			if scalar > 1:
-				if scalar == 100000:
-					scalar_label = "100k"
-				elif scalar == 1000000:
-					scalar_label = "million people"
+		for loc_tokens in chart_meta['locations']:
+			location_tokens = []
+			location_names = []
+			for lt in loc_tokens.split("~"):
+				try:
+					location_group = models.LocationGroup.objects.get(token=lt)
+					location_names.append(location_group.name)
+					location_tokens += [lgl.location_id for lgl in location_group.locationgrouplocation_set.all()]
+				except:
+					location_tokens.append(lt)
+					location_names.append(lt)
+
+			locations = list(models.Location.objects.filter(token__in=location_tokens))
+			total_population = sum([l.population for l in locations]) if len(locations) > 0 else 0
+
+			for attr in chart_meta['attributes']:
+				attr_label = attr.replace("_", " ").title()
+				scalar = common.get(constants.ATTR_SCALAR, attr, 1)
+
+				if scalar > 1:
+					if scalar == 100000:
+						scalar_label = "100k"
+					elif scalar == 1000000:
+						scalar_label = "million people"
+					else:
+						scalar_label = str(scalar)
+
+					series_name = "%s per %s in %s" % (attr_label, scalar_label, " & ".join(location_names))
 				else:
-					scalar_label = str(scalar)
+					series_name = "%s in %s" % (attr_label, " & ".join(location_names))
 
-				series_name = "%s per %s in %s" % (attr_label, scalar_label, " & ".join(location_names))
-			else:
-				series_name = "%s in %s" % (attr_label, " & ".join(location_names))
+				if attr == datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE:
+					scalar = 100
+					normalize_by_population = False
+					multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
+					function_get_value = lambda ldd: float(ldd.positive) / float(ldd.total_tests)
+				else:
+					attr_label = attr_label + "s"
+					normalize_by_population = True
+					multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_SUM
+					function_get_value = lambda ldd: float(getattr(ldd, attr, 0))
 
-			if attr == datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE:
-				scalar = 100
-				normalize_by_population = False
-				multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
-				function_get_value = lambda ldd: float(ldd.positive) / float(ldd.total_tests)
-			else:
-				attr_label = attr_label + "s"
-				normalize_by_population = True
-				multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_SUM
-				function_get_value = lambda ldd: float(getattr(ldd, attr, 0))
-
-			series_list.append(
-				{
-					"type": "series",
-					"name": series_name,
-					"location": loc_tokens,
-					"population": total_population,
-					"attr": attr,
-					"rolling_average_size": rolling_average_size,
-					"data": datamodeling_service.get_normalized_data(
-						locations,
-						function_get_value,
-						scalar,
-						earliest_date,
-						latest_date,
-						multiple_location_handling=multiple_location_handling,
-						rolling_average_size=rolling_average_size,
-						normalize_by_population=normalize_by_population
-					)
-				}
-			)
-	return series_list
+				series_list.append(
+					{
+						"type": "series",
+						"name": series_name,
+						"location": loc_tokens,
+						"population": total_population,
+						"attr": attr,
+						"rolling_average_size": rolling_average_size,
+						"data": datamodeling_service.get_normalized_data(
+							locations,
+							function_get_value,
+							scalar,
+							earliest_date,
+							latest_date,
+							multiple_location_handling=multiple_location_handling,
+							rolling_average_size=rolling_average_size,
+							normalize_by_population=normalize_by_population
+						)
+					}
+				)
+			chart_data["name"] = chart_meta['name']
+			if chart_data["name"] is None:
+				chart_data["name"] = ", ".join([s['name'] for s in series_list])
+	return chart_list
 
 
 def send_api_response(payload):
@@ -162,10 +187,9 @@ def get_locations():
 
 	return locations
 
+
 def get_attr_labelvalues():
 	return [
 		{"label": datamodeling_service.QUERYABLE_ATTR_LABELS[a], "value": a}
 		for a in datamodeling_service.QUERYABLE_ATTRS
 	]
-
-

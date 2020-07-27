@@ -12,6 +12,12 @@ class MyJSONEncoder(DjangoJSONEncoder):
 			return super().default(o)
 
 
+def get_int(obj, attr, default_value=None):
+	try:
+		return int(get(obj, attr, default_value))
+	except:
+		return default_value
+
 def get_date(obj, attr, default_value=None):
 	return parse_date(get(obj, attr, default_value))
 
@@ -27,7 +33,7 @@ def get_date_key(d):
 	d = parse_date(d)
 	if d is None:
 		return None
-	return d.strftime("%Y%m%d")
+	return d.strftime("%Y-%m-%d")
 
 
 def parse_date(date_str):
@@ -38,4 +44,4 @@ def parse_date(date_str):
 	elif isinstance(date_str, datetime.datetime):
 		return date_str.date()
 	else:
-		return dateparser.parse(date_str)
+		return dateparser.parse(date_str, date_formats=["%Y-%m-%d"])
