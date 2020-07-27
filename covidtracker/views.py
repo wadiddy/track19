@@ -148,9 +148,9 @@ def build_chart_data(page_model):
 							series_name = "%s per %s in %s" % (attr_label, scalar_label, " & ".join(location_names))
 					else:
 						if len(location_names) == 1 and attr_token == datamodeling_service.QUERYABLE_ATTR_OTHER_DEATHS:
-							series_name = "%s in %s" % (attr_label, " & ".join(location_names))
-						else:
 							series_name = "%s" % (attr_label)
+						else:
+							series_name = "%s in %s" % (attr_label, " & ".join(location_names))
 
 					if attr.startswith(datamodeling_service.QUERYABLE_ATTR_OTHER_DEATH_prefix):
 						function_get_value = lambda ldd: float(datamodeling_service.CAUSEOFDEATH_USYEARLYDEATHS[attr]) / (365.0 * float(constants.USA_POPULATION))
@@ -160,7 +160,7 @@ def build_chart_data(page_model):
 						scalar = 100
 						normalize_by_population = False
 						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
-						function_get_value = lambda ldd: float(ldd.positive) / float(ldd.total_tests)
+						function_get_value = lambda ldd: min(1, float(ldd.positive) / float(ldd.total_tests))
 					else:
 						attr_label = attr_label + "s"
 						normalize_by_population = True
