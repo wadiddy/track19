@@ -29,6 +29,24 @@ def index_page(request):
 	}
 	return render(request, "index.html", context=ctx)
 
+def about(request):
+	page_model = build_page_model(request, default_chart={
+		"name": None,
+		"locations": ["USA"],
+		"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
+	})
+	chart_data = build_chart_data(page_model)
+
+	ctx = {
+		"chart_data": chart_data,
+		"chart_data_json": json.dumps(chart_data),
+		"page_model": page_model,
+		"page_model_json": json.dumps(page_model),
+		"last_updated": models.LocationDayData.objects.all().order_by("-date")[0].date,
+		"avail_attributes": get_attr_labelvalues(),
+		"avail_locations": get_locations()
+	}
+	return render(request, "about.html", context=ctx)
 
 def build_page_model(request, default_chart=None):
 	page_model = {
@@ -80,6 +98,8 @@ def build_chart_data(page_model):
 	earliest_date = common.parse_date(page_model['earliest_date'])
 	latest_date = common.parse_date(page_model['latest_date'])
 
+	all_location_names = []
+
 	chart_list = []
 	for chart_meta in page_model['charts']:
 		chart_data = {
@@ -100,59 +120,81 @@ def build_chart_data(page_model):
 					location_tokens.append(lt)
 					location_names.append(lt)
 
+			all_location_names += location_names
 			locations = list(models.Location.objects.filter(token__in=location_tokens))
 			total_population = sum([l.population for l in locations]) if len(locations) > 0 else 0
 
-			for attr in chart_meta['attributes']:
-				attr_label = attr.replace("_", " ").title()
-				scalar = common.get(constants.ATTR_SCALAR, attr, 1)
+			for attr_token in chart_meta['attributes']:
+				if attr_token == datamodeling_service.QUERYABLE_ATTR_OTHER_DEATHS:
+					attrs = datamodeling_service.OTHER_CAUSES_OF_DEATH_DISPLAY
+				else:
+					attrs = [attr_token]
 
-				if scalar > 1:
-					if scalar == 100000:
-						scalar_label = "100k"
-					elif scalar == 1000000:
-						scalar_label = "million people"
+				for attr in attrs:
+					attr_label = attr.replace("_", " ").title().replace("Other Death", "").strip()
+					scalar = common.get(datamodeling_service.ATTR_SCALAR, attr, 1)
+
+					if scalar > 1:
+						if scalar == 100000:
+							scalar_label = "100k"
+						elif scalar == 1000000:
+							scalar_label = "million people"
+						else:
+							scalar_label = str(scalar)
+
+						if len(location_names) == 1 and attr_token == datamodeling_service.QUERYABLE_ATTR_OTHER_DEATHS:
+							series_name = "%s per %s" % (attr_label, scalar_label)
+						else:
+							series_name = "%s per %s in %s" % (attr_label, scalar_label, " & ".join(location_names))
 					else:
-						scalar_label = str(scalar)
+						if len(location_names) == 1 and attr_token == datamodeling_service.QUERYABLE_ATTR_OTHER_DEATHS:
+							series_name = "%s in %s" % (attr_label, " & ".join(location_names))
+						else:
+							series_name = "%s" % (attr_label)
 
-					series_name = "%s per %s in %s" % (attr_label, scalar_label, " & ".join(location_names))
-				else:
-					series_name = "%s in %s" % (attr_label, " & ".join(location_names))
+					if attr.startswith(datamodeling_service.QUERYABLE_ATTR_OTHER_DEATH_prefix):
+						function_get_value = lambda ldd: float(datamodeling_service.CAUSEOFDEATH_USYEARLYDEATHS[attr]) / (365.0 * float(constants.USA_POPULATION))
+						normalize_by_population = False
+						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
+					elif attr == datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE:
+						scalar = 100
+						normalize_by_population = False
+						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
+						function_get_value = lambda ldd: float(ldd.positive) / float(ldd.total_tests)
+					else:
+						attr_label = attr_label + "s"
+						normalize_by_population = True
+						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_SUM
+						if attr_token == datamodeling_service.QUERYABLE_ATTR_COVID_DEATHS:
+							query_attr = "deaths"
+						else:
+							query_attr = attr
+						function_get_value = lambda ldd: float(getattr(ldd, query_attr, 0))
 
-				if attr == datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE:
-					scalar = 100
-					normalize_by_population = False
-					multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
-					function_get_value = lambda ldd: float(ldd.positive) / float(ldd.total_tests)
-				else:
-					attr_label = attr_label + "s"
-					normalize_by_population = True
-					multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_SUM
-					function_get_value = lambda ldd: float(getattr(ldd, attr, 0))
-
-				series_list.append(
-					{
-						"type": "series",
-						"name": series_name,
-						"location": loc_tokens,
-						"population": total_population,
-						"attr": attr,
-						"rolling_average_size": rolling_average_size,
-						"data": datamodeling_service.get_normalized_data(
-							locations,
-							function_get_value,
-							scalar,
-							earliest_date,
-							latest_date,
-							multiple_location_handling=multiple_location_handling,
-							rolling_average_size=rolling_average_size,
-							normalize_by_population=normalize_by_population
-						)
-					}
-				)
+					series_list.append(
+						{
+							"type": "series",
+							"name": series_name,
+							"location": loc_tokens,
+							"population": total_population,
+							"attr": attr,
+							"rolling_average_size": rolling_average_size,
+							"data": datamodeling_service.get_normalized_data(
+								locations,
+								function_get_value,
+								scalar,
+								earliest_date,
+								latest_date,
+								multiple_location_handling=multiple_location_handling,
+								rolling_average_size=rolling_average_size,
+								normalize_by_population=normalize_by_population
+							)
+						}
+					)
 			chart_data["name"] = chart_meta['name']
 			if chart_data["name"] is None:
-				chart_data["name"] = ", ".join([s['name'] for s in series_list])
+				all_attrs = [attr.replace("_", " ").title() for attr in chart_meta['attributes']]
+				chart_data["name"] = "%s in %s" % (" vs ".join(all_attrs), ", ".join(sorted(set(all_location_names))))
 	return chart_list
 
 

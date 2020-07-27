@@ -9,6 +9,12 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
         map_attribute_label_value[a.value] = a.label;
     });
 
+    $(".btn_remove_chart").click(function(ev){
+        let chart_index = $(ev.target).closest(".chart_card").data("chart_index");
+        page_model.charts.splice(chart_index, 1);
+        update_page();
+    });
+
     $('#global_configuration_modal')
         .on('click', '.btn-primary', function(ev){
             page_model.rolling_average_size = $('#global_configuration_modal #inp_rolling_average_size').val();
@@ -109,7 +115,7 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
 
         let attributes_contianer = $("#chart_configuration_modal .div_modal_attributes_container");
         attributes_contianer.empty();
-        [...new Set(chart_data.attributes)].sort().forEach(function (attribute_token) {
+        chart_data.attributes.forEach(function (attribute_token) {
             let attribute_name = map_attribute_label_value[attribute_token]
             attributes_contianer.append("<li data-attribute_token='" + attribute_token + "' class='small text-gray-700'>" + attribute_name + "&nbsp;(<a class='a_remove_attribute' title='Remove Metric' href='#'>x</a>)</li>");
         });

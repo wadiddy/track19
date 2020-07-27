@@ -44,7 +44,7 @@
             <!-- Topbar -->
             <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
                 <a class="text-gray-900 sidebar-brand d-flex align-items-center justify-content-center" href="/">
-                    <div class="sidebar-brand-icon"><i class="fas fa-chart-line"></i></div><div class="sidebar-brand-text mx-1 ">Track 19</div>
+                    <div class="sidebar-brand-icon"><i class="fas fa-chart-line"></i></div><div class="sidebar-brand-text mx-1 ">Track&nbsp;19</div>
                 </a>
 
                 <div class="topbar-divider d-none d-sm-block"></div>
@@ -54,12 +54,17 @@
                     Add a Chart
                 </button>
 
-                <div style="position: absolute; right: 20px;">
-                <button id="" class="btn btn-link " data-toggle="modal" data-target="#global_configuration_modal">
-                    <i class="fa fa-cog"></i>
-                   Settings
-                </button>
-                </div>
+                <div class="topbar-divider d-none d-sm-block"></div>
+
+                    <a href="#" class="small text-gray-600" data-toggle="modal" data-target="#global_configuration_modal" style="white-space: normal">
+                        <i class="fa fa-cog"></i>
+                        {{  page_model.earliest_date|default_if_none:"Start of pandemic" }} to {{ page_model.latest_date|default_if_none:"today" }}{%  if page_model.rolling_average_size != 1 %} smoothed to a {{ page_model.rolling_average_size  }} day rolling-avg {%  endif %}
+                    </a>
+
+                <div class="topbar-divider d-none d-sm-block"></div>
+
+                <a href="{% url 'about' %}" class="small text-gray-600 float-right">About</a>
+
 
             </nav>
             <!-- End of Topbar -->

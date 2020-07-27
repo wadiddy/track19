@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="my-5">
+        <h5>What are the data sources?</h5>
+        <div class="help">
+            <ul>
+                <li><a target=_blank href="https://covidtracking.com/api/v1/states/daily.csv">USA Data</a></li>
+                <li><a target=_blank href="https://data.ca.gov/dataset/590188d5-8545-4c93-a9a0-e230f0db7290/resource/926fd08f-cc91-4828-af38-bd45de97f8c3/download/statewide_cases.csv">CA Case Data</a></li>
+                <li><a target=_blank href="https://data.ca.gov/dataset/529ac907-6ba1-4cb7-9aae-8966fc96aeef/resource/42d33765-20fd-44b8-a978-b083b7542225/download/hospitals_by_county.csv">CA Hospitals Data</a></li>
+            </ul>
+        </ul>
+    </div>
+
+    <div class="my-5">
+        <h5>Can I use your API?</h5>
+        <div class="help">
+            Sure!  Here's some examples
+            <ul>
+                <li><a target=_blank href="{% url 'api_vi_fetch' %}?loc=USA&loc=CA=deaths&attr=positive_rate">/api/v1/fetch?loc=USA&attr=positive_rate</a></li>
+                <li><a target=_blank href="{% url 'api_vi_fetch' %}?ravg=7&date_from=2020-05-01&date_to=2020-07-22&loc=USA&attr=positive_rate">/api/v1/fetch?ravg=7&date_from=2020-05-01&date_to=2020-07-22&loc=USA&attr=positive_rate</a></li>
+                <li><a target=_blank href="{% url 'api_vi_fetch' %}?ravg=7&date_from=2020-05-01&date_to=2020-07-22&loc=USA&attr=positive_rate&loc1=SanFranciscoBayArea&loc1=FL&attr1=total_tests">/api/v1/fetch?ravg=7&date_from=2020-05-01&date_to=2020-07-22&loc=USA&attr=positive_rate&loc1=SanFranciscoBayArea&loc1=FL&attr1=total_tests</a></li>
+                <li><a target=_blank href="{% url 'api_vi_locations' %}">/api/v1/locations</a></li>
+                <li><a target=_blank href="{% url 'api_vi_attributes' %}">/api/v1/attributes</a></li>
+            </ul>
+            Have fun - LMK if you have any questions.
+        </div>
+    </div>
+
+    <div class="my-5">
+        <h5>Who runs this site?</h5>
+        <div class="help">
+            <ul>
+                <li>JJ Schultz: jj at jjschultz dot com</li>
+            </ul>
+        </div>
+    </div>
+
+{% endblock %}

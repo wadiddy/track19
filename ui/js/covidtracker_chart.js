@@ -1,9 +1,18 @@
 const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000'];
-    function covid_tracker_chart(charts_container, chart_datas) {
+
+function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
+    const map_attribute_label_value = {}
+    avail_attributes.forEach(function (a) {
+        map_attribute_label_value[a.value] = a.label;
+    });
+
     // Set new default font family and font color to mimic Bootstrap's default styling
     Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
     Chart.defaults.global.defaultFontColor = '#858796';
     Chart.defaults.global.animation.duration = 0;
+    Chart.Legend.prototype.afterFit = function() {
+        this.height = this.height + 20;
+    };
 
     if (chart_datas.length == 0) {
         $('#chart_configuration_modal').modal('show');
@@ -13,7 +22,7 @@ const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4'
     var labels = []
 
     chart_datas.forEach(function (chart_data, idx) {
-        if (chart_data.series_list.length === 0){
+        if (chart_data.series_list.length === 0) {
             return;
         }
 
@@ -21,6 +30,40 @@ const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4'
         for (k in chart_data.series_list[0].data) {
             labels.push(k);
         }
+
+        let y_axis_list = [...new Set(chart_data.series_list.map(function (s) {
+            let attr = s.attr;
+            let axis_id = attr.indexOf("other_death_") == 0 || attr === "covid_deaths" ? "death" : attr;
+            return axis_id;
+        }))].map(function (axis_id, idx) {
+            let axis_label = axis_id == "death" ? "Deaths per million people" : map_attribute_label_value[axis_id];
+            return {
+                id: axis_id,
+                type: 'linear',
+                position: idx === 0 ? 'left' : 'right',
+                beginAtZero: true,
+                scaleLabel: {
+                    fontFamily: 'Nunito,-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif',
+                    display: true,
+                    labelString: axis_label
+                },
+
+                ticks: {
+                    min: 0,
+                    maxTicksLimit: 5,
+                    padding: 10,
+                },
+                gridLines: {
+                    color: "rgb(234, 236, 244)",
+                    zeroLineColor: "rgb(234, 236, 244)",
+                    drawBorder: false,
+                    borderDash: [2],
+                    zeroLineBorderDash: [2]
+                }
+            }
+        });
+
+        console.log(y_axis_list);
 
         let datasets = chart_data.series_list.map(function (series_data, idx) {
             var values = []
@@ -30,12 +73,16 @@ const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4'
 
             let c = COLORS[idx];
 
+            let axis_id = series_data.attr.indexOf("other_death_") == 0 || series_data.attr == "covid_deaths" ? "death" : series_data.attr;
+
             return {
                 label: series_data.name,
+                yAxisID: axis_id,
                 lineTension: 0.3,
                 backgroundColor: "rgba(78, 115, 223, 0.05)",
                 borderColor: c,
-                pointRadius: 3,
+                borderWidth: 5,
+                pointRadius: 0,
                 pointBackgroundColor: c,
                 pointBorderColor: c,
                 pointHoverRadius: 3,
@@ -45,8 +92,8 @@ const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4'
                 pointBorderWidth: 2,
                 data: values
             }
-        });
 
+        });
 
         let canvas = $("#chart_canvas_" + idx)[0];
 
@@ -80,27 +127,14 @@ const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4'
                             maxTicksLimit: 7
                         }
                     }],
-                    yAxes: [{
-                        beginAtZero: true,
-                        ticks: {
-                            maxTicksLimit: 5,
-                            padding: 10,
-                            // Include a dollar sign in the ticks
-                            // callback: function (value, index, values) {
-                            //     return '$' + number_format(value);
-                            // }
-                        },
-                        gridLines: {
-                            color: "rgb(234, 236, 244)",
-                            zeroLineColor: "rgb(234, 236, 244)",
-                            drawBorder: false,
-                            borderDash: [2],
-                            zeroLineBorderDash: [2]
-                        }
-                    }],
+                    yAxes: y_axis_list,
                 },
                 legend: {
-                    display: true
+                    display: true,
+                    labels: {
+                        fontFamily: 'Nunito,-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif',
+                        usePointStyle: true
+                    }
                 },
                 tooltips: {
                     backgroundColor: "rgb(255,255,255)",
@@ -125,8 +159,6 @@ const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4'
                 }
             }
         });
-
-        console.log(myLineChart);
     });
 }
 

@@ -3,23 +3,23 @@
 {% block content %}
     <div id="charts_container">
         {% for chart in chart_data %}
-            <div id="card_{{ forloop.counter0 }}" class="col-xl-12 col-lg-12">
+            <div id="card_{{ forloop.counter0 }}" class="col-xl-12 col-lg-12 chart_card" data-chart_index="{{  forloop.counter0 }}">
                 <div class="card shadow mb-4">
                     <!-- Card Header - Dropdown -->
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                         <h6 class="m-0 font-weight-bold text-primary">{{ chart.name }}</h6>
 
-                        <div class="align-right">
-                            <a href="#" class="mx-2 small text-gray-500" data-toggle="modal" data-target="#chart_configuration_modal" data-chart_index="{{ forloop.counter0 }}">
+                        <div class="align-right" style="white-space: nowrap;">
+                            <a href="#" class="mx-2 small text-gray-500" data-toggle="modal" data-target="#chart_configuration_modal" data-chart_index="{{ forloop.counter0 }}" style="white-space: nowrap;">
                             <i class="fas fa-edit"></i>&nbsp;Edit</a>
                             <a/>
-                            <a href="#" class="mx-2 small text-gray-500"><i class="fas fa-minus-circle"></i>&nbsp;Remove</a>
+                            <a href="#" class="btn_remove_chart mx-2 small text-gray-500" style="white-space: nowrap;"><i class="fas fa-minus-circle"></i>&nbsp;Remove</a>
                         </div>
                     </div>
                     <!-- Card Body -->
                     <div class="card-body">
                         <div class="chart-container">
-                            <canvas id="chart_canvas_{{ forloop.counter0 }}" height="500px;"></canvas>
+                            <canvas id="chart_canvas_{{ forloop.counter0 }}" height="400px;"></canvas>
                         </div>
                     </div>
                 </div>
@@ -31,7 +31,8 @@
         $(document).ready(function () {
             covid_tracker_chart(
                 $("#charts_container"),
-                {{  chart_data_json|safe }}
+                {{  chart_data_json|safe }},
+                {{ avail_attributes|safe }}
             );
         });
     </script>
