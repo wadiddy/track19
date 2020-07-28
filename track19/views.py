@@ -11,12 +11,15 @@ from .common import MyJSONEncoder
 
 
 def index_page(request):
+	print("1")
 	page_model = build_page_model(request, default_chart={
 		"name": None,
 		"locations": ["USA"],
 		"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
 	})
+	print("2")
 	chart_data = build_chart_data(page_model)
+	print("3")
 
 	ctx = {
 		"chart_data": chart_data,
@@ -27,7 +30,12 @@ def index_page(request):
 		"avail_attributes": get_attr_labelvalues(),
 		"avail_locations": get_locations()
 	}
-	return render(request, "index.html", context=ctx)
+	print("4")
+
+	r = render(request, "index.html", context=ctx)
+	print("5")
+
+	return r
 
 def about(request):
 	page_model = build_page_model(request, default_chart={
