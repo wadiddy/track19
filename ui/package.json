@@ -16,13 +16,13 @@
         "admin",
         "app"
     ],
-    "homepage": "https://https://jjscovidtracker.herokuapp.com/",
+    "homepage": "https://track19.herokuapp.com/",
     "license": "MIT",
     "author": "JJ Schultz",
     "contributors": [],
     "repository": {
         "type": "git",
-        "url": "https://github.com/jjschultz/covidtracker"
+        "url": "https://github.com/wadiddy/track19"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "5.13.1",

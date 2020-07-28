@@ -14,7 +14,7 @@ const rename = require("gulp-rename");
 const sass = require("gulp-sass");
 const uglify = require("gulp-uglify");
 
-const DEST_ROOT = "../covidtracker/static"
+const DEST_ROOT = "../track19/static"
 
 // Load package.json for banner
 const pkg = require('./package.json');
@@ -128,14 +128,14 @@ function js() {
             // './js/chart-bar-demo.js',
             // './js/chart-pie-demo.js',
             // './js/datatables-demo.js',
-            './js/covidtracker_form.js',
-            './js/covidtracker_chart.js',
+            './js/track19_form.js',
+            './js/track19_chart.js',
         ])
         // .pipe(uglify())
         .pipe(header(banner, {
             pkg: pkg
         }))
-        .pipe(concat('covidtracker.all.js'))
+        .pipe(concat('track19.all.js'))
         .pipe(rename({
             suffix: '.min'
         }))

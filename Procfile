@@ -1,2 +1,2 @@
-release: python manage.py migrate covidtracker
-web: gunicorn covidtracker.wsgi --log-file -
+release: python manage.py migrate track19
+web: gunicorn track19.wsgi --log-file -

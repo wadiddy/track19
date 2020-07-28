@@ -8,4 +8,4 @@ getting-started/*
 /env/
 /.idea/
 /ui/node_modules/
-/covidtracker/local_settings.py
+/track19/local_settings.py
