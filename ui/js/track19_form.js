@@ -54,7 +54,7 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
                     "locations": [],
                     "attributes": [],
                 }
-                page_model.charts.push(chart_data);
+                page_model.charts.unshift(chart_data);
             }
 
             $('#chart_configuration_modal').data("chart_data", chart_data);
