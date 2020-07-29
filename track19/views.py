@@ -12,49 +12,62 @@ from .common import MyJSONEncoder
 
 def index_page(request):
 	print("1")
-	page_model = build_page_model(request, default_chart={
-		"name": None,
-		"locations": ["USA"],
-		"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
-	})
+	if 'clear' in request.GET:
+		page_model = build_page_model(request)
+	else:
+		page_model = build_page_model(request, default_chart={
+			"name": None,
+			"locations": ["USA"],
+			"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
+		})
 	print("2")
 	chart_data = build_chart_data(page_model)
-	print("3")
+	print("3", models.LocationDayData.objects.all().count())
 
-	ctx = {
+	return _send_response(request, "index.html", {
 		"chart_data": chart_data,
 		"chart_data_json": json.dumps(chart_data),
 		"page_model": page_model,
 		"page_model_json": json.dumps(page_model),
-		"last_updated": models.LocationDayData.objects.all().order_by("-date")[0].date,
 		"avail_attributes": get_attr_labelvalues(),
 		"avail_locations": get_locations()
-	}
-	print("4")
+	})
 
-	r = render(request, "index.html", context=ctx)
-	print("5")
 
+def _send_response(request, tmpl, ctx=None):
+	if ctx is None:
+		ctx = {}
+
+	ctx["last_updated"] = models.LocationDayData.objects.all().order_by("-date")[0].date
+
+	ctx["example_charts"] = [
+		{
+			"params": "ravg=14&date_from=2020-02-01&loc=NY&loc=FL&loc=TX&loc=CA&attr=covid_deaths&loc1=NY&loc1=FL&loc1=TX&loc1=CA&attr1=positive",
+			"label": "NY vs FL vs TX vs CA"
+		},
+		{
+			"params": "ravg=14&date_from=2020-05-15&loc=SanFranciscoBayArea&loc=CA:%20San%20Francisco%20County&loc=CA&loc=USA&loc=WI&loc=Delta&attr=positive_rate",
+			"label": "Positive Test Rate across multiple locations"
+		},
+		{
+			"params": "ravg=14&date_from=2020-02-01&loc=CA:%20San%20Francisco%20County&attr=covid_deaths&attr=other_deaths&loc1=SanFranciscoBayArea&attr1=covid_deaths&attr1=other_deaths&loc2=Delta&attr2=covid_deaths&attr2=other_deaths&loc3=CA&attr3=covid_deaths&attr3=other_deaths&loc4=WI&attr4=covid_deaths&attr4=other_deaths&loc5=USA&attr5=covid_deaths&attr5=other_deaths",
+			"label": "Deaths per million people across multiple locations "
+		},
+		{
+			"params": "ravg=14&date_from=2020-05-15&loc=CA:%20San%20Francisco%20County&attr=positive_rate&attr=covid_deaths&loc1=SanFranciscoBayArea&attr1=positive_rate&attr1=covid_deaths&loc2=Delta&attr2=positive_rate&attr2=covid_deaths&loc3=CA&attr3=positive_rate&attr3=covid_deaths&loc4=USA&attr4=positive_rate&attr4=covid_deaths",
+			"label": "Positive Test Rate vs Covid Deaths"
+		},
+	]
+
+	r = render(request, tmpl, context=ctx)
 	return r
 
-def about(request):
-	page_model = build_page_model(request, default_chart={
-		"name": None,
-		"locations": ["USA"],
-		"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
-	})
-	chart_data = build_chart_data(page_model)
 
-	ctx = {
-		"chart_data": chart_data,
-		"chart_data_json": json.dumps(chart_data),
-		"page_model": page_model,
-		"page_model_json": json.dumps(page_model),
-		"last_updated": models.LocationDayData.objects.all().order_by("-date")[0].date,
-		"avail_attributes": get_attr_labelvalues(),
-		"avail_locations": get_locations()
-	}
-	return render(request, "about.html", context=ctx)
+def about(request):
+	return _send_response(request, "about.html", {
+		"metrics": get_attr_labelvalues()
+	})
+
 
 def build_page_model(request, default_chart=None):
 	page_model = {
@@ -127,7 +140,11 @@ def build_chart_data(page_model):
 					location_tokens.append(lt)
 					location_names.append(lt)
 
-			all_location_names += location_names
+			for ln in location_names:
+				if ln not in all_location_names:
+					# do this instead of a set to preserve order
+					all_location_names.append(ln)
+
 			locations = list(models.Location.objects.filter(token__in=location_tokens))
 			total_population = sum([l.population for l in locations]) if len(locations) > 0 else 0
 
@@ -160,7 +177,9 @@ def build_chart_data(page_model):
 							series_name = "%s in %s" % (attr_label, " & ".join(location_names))
 
 					if attr.startswith(datamodeling_service.QUERYABLE_ATTR_OTHER_DEATH_prefix):
-						function_get_value = lambda ldd: float(datamodeling_service.CAUSEOFDEATH_USYEARLYDEATHS[attr]) / (365.0 * float(constants.USA_POPULATION))
+						function_get_value = lambda ldd: float(
+							datamodeling_service.CAUSEOFDEATH_USYEARLYDEATHS[attr]) / (
+									                                 365.0 * float(constants.USA_POPULATION))
 						normalize_by_population = False
 						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
 					elif attr == datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE:
@@ -201,7 +220,7 @@ def build_chart_data(page_model):
 			chart_data["name"] = chart_meta['name']
 			if chart_data["name"] is None:
 				all_attrs = [attr.replace("_", " ").title() for attr in chart_meta['attributes']]
-				chart_data["name"] = "%s in %s" % (" vs ".join(all_attrs), ", ".join(sorted(set(all_location_names))))
+				chart_data["name"] = "%s in %s" % (" vs ".join(all_attrs), ", ".join(all_location_names))
 	return chart_list
 
 

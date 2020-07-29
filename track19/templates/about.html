@@ -9,7 +9,23 @@
                 <li><a target=_blank href="https://data.ca.gov/dataset/590188d5-8545-4c93-a9a0-e230f0db7290/resource/926fd08f-cc91-4828-af38-bd45de97f8c3/download/statewide_cases.csv">CA Case Data</a></li>
                 <li><a target=_blank href="https://data.ca.gov/dataset/529ac907-6ba1-4cb7-9aae-8966fc96aeef/resource/42d33765-20fd-44b8-a978-b083b7542225/download/hospitals_by_county.csv">CA Hospitals Data</a></li>
             </ul>
-        </ul>
+            </ul>
+        </div>
+    </div>
+
+    <div class="my-5">
+        <h5>What Metrics can I report on?</h5>
+        <div class="help">
+            <ul>
+                {% for m in metrics %}
+                    <li>
+                        <a target=_blank href="{{ m.value }}">{{ m.label }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+            </ul>
+            All metrics are normalized, either by a rate or per 100k or per million residents.  This allows one to do a more 'apples to apples' comparison between locations
+        </div>
     </div>
 
     <div class="my-5">
@@ -24,6 +40,15 @@
                 <li><a target=_blank href="{% url 'api_vi_attributes' %}">/api/v1/attributes</a></li>
             </ul>
             Have fun - LMK if you have any questions.
+        </div>
+    </div>
+
+    <div class="my-5">
+        <h5>Can I see the code and/or contribute to the code?</h5>
+        <div class="help">
+            Sure!  Here it is:  <a target=_blank href="https://github.com/wadiddy/track19">https://github.com/wadiddy/track19</a>
+            <br><br>
+            The real brains of the operation <a target=_blank href="https://github.com/wadiddy/track19/blob/master/track19/datamodeling_service.py">lives here</a>
         </div>
     </div>
 

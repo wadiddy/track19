@@ -44,26 +44,63 @@
             <!-- Topbar -->
             <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
                 <a class="text-gray-900 sidebar-brand d-flex align-items-center justify-content-center" href="/">
-                    <div class="sidebar-brand-icon"><i class="fas fa-chart-line"></i></div><div class="sidebar-brand-text mx-1 ">Track&nbsp;19</div>
+                    <div class="sidebar-brand-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="sidebar-brand-text mx-1 ">Track&nbsp;19</div>
                 </a>
+
 
                 <div class="topbar-divider d-none d-sm-block"></div>
 
                 <button id="" class="btn btn-link" data-toggle="modal" data-target="#chart_configuration_modal">
                     <i class="fa fa-plus-circle"></i>
-                    Add a Chart
+                    Add Chart
                 </button>
 
+                <a href="/?clear=true" class="btn btn-link">
+                    <i class="fas fa-trash-alt"></i>
+                    Clear Charts
+                </a>
+
                 <div class="topbar-divider d-none d-sm-block"></div>
 
-                    <a href="#" class="small text-gray-600" data-toggle="modal" data-target="#global_configuration_modal" style="white-space: normal">
+                <ul class="navbar-nav">
+                    <!-- Nav Item - User Information -->
+                    <li class="nav-item dropdown no-arrow">
+                        <a class="btn btn-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-chart-line"></i>
+                            Example Charts
+                        </a>
+                        <!-- Dropdown - User Information -->
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                            {% for ec in example_charts %}
+                            <a class="dropdown-item" href="{% url 'index_page' %}?{{ ec.params }}">
+                                <i class="fas fa-chart-line fa-sm fa-fw mr-2 text-gray-400"></i>
+                                {{ ec.label }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </li>
+
+                </ul>
+
+                {% if page_model %}
+                    <div class="topbar-divider d-none d-sm-block"></div>
+
+                    <a href="#" class="small text-gray-600" data-toggle="modal" data-target="#global_configuration_modal"
+                       style="white-space: normal">
                         <i class="fa fa-cog"></i>
-                        {{  page_model.earliest_date|default_if_none:"Start of pandemic" }} to {{ page_model.latest_date|default_if_none:"today" }}{%  if page_model.rolling_average_size != 1 %} smoothed to a {{ page_model.rolling_average_size  }} day rolling-avg {%  endif %}
+                        {{ page_model.earliest_date|default_if_none:"Start of pandemic" }}
+                        to {{ page_model.latest_date|default_if_none:"today" }}
+                        {% if page_model.rolling_average_size != 1 %}
+                            smoothed to a {{ page_model.rolling_average_size }} day rolling-avg
+                        {% endif %}
                     </a>
 
-                <div class="topbar-divider d-none d-sm-block"></div>
+                {% endif %}
 
-                <a href="{% url 'about' %}" class="small text-gray-600 float-right">About</a>
+                <a href="{% url 'about' %}" class="ml-auto">About</a>
 
 
             </nav>
@@ -82,7 +119,7 @@
         <footer class="sticky-footer bg-white">
             <div class="container my-auto">
                 <div class="copyright text-center my-auto">
-                    <div>Data fresh as of {{ last_updated }}&nbsp;|&nbsp;Track19 Copyright &copy; 2020</div>
+                    <div>Data fresh as of {{ last_updated }}&nbsp;|&nbsp;Copyright &copy; 2020 Wadiddy, LLC CA</div>
                 </div>
             </div>
         </footer>
@@ -115,7 +152,8 @@
                     <div class="div_modal_locations_container">
                     </div>
 
-                    <input type="text" class="my-2 small location-selector form-control bg-light border-0 small" placeholder="Search for a Location.." aria-label="Search" aria-describedby="basic-addon2">
+                    <input type="text" class="my-2 small location-selector form-control bg-light border-0 small"
+                           placeholder="Search for a Location.." aria-label="Search" aria-describedby="basic-addon2">
 
                     <hr class="sidebar-divider">
 
@@ -123,13 +161,14 @@
                     <ul class="div_modal_attributes_container">
                     </ul>
 
-                    <div class="dropdown my-2" id="btn_add_metric" >
-                        <button class="btn-sm btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <div class="dropdown my-2" id="btn_add_metric">
+                        <button class="btn-sm btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Add an Infection Metric
                         </button>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             {% for attr_lv in avail_attributes %}
-                                <a class="dropdown-item dropdown-item-attribute" value="{{ attr_lv.value }}" href="#">{{ attr_lv.label }}</a>
+                            <a class="dropdown-item dropdown-item-attribute" value="{{ attr_lv.value }}" href="#">{{ attr_lv.label }}</a>
                             {% endfor %}
                         </div>
                     </div>
@@ -160,21 +199,31 @@
                 <form>
                     <div class="mb-3">
                         <label class="control-label">Earliest Date</label>
-                        <input class="form-control" name="earliest_date" id="inp_earliest_date" placeholder="Earliest Date" type="date" value="{{ page_model.earliest_date|default_if_none:"" }}"/>
+                        <input class="form-control" name="earliest_date" id="inp_earliest_date"
+                               placeholder="Earliest Date" type="date"
+                               value="{{ page_model.earliest_date|default_if_none:"" }}"/>
                     </div>
 
                     <div class="mb-3">
                         <label class="control-label">Latest Date</label>
-                        <input class="form-control" name="latest_date" id="inp_latest_date" placeholder="Earliest Date" type="date" value="{{ page_model.latest_date|default_if_none:"" }}"/>
+                        <input class="form-control" name="latest_date" id="inp_latest_date" placeholder="Earliest Date"
+                               type="date" value="{{ page_model.latest_date|default_if_none:"" }}"/>
                     </div>
 
                     <div class="mb-3">
                         <label class="control-label">Smoothing</label>
                         <select class="form-control" name="rolling_average_size" id="inp_rolling_average_size">
-                            <option value=1 {% if page_model.rolling_average_size == 1 %}selected{% endif %}>None</option>
-                            <option value=7 {% if page_model.rolling_average_size == 7 %}selected{% endif %}>7 day rolling-avg</option>
-                            <option value=14 {% if page_model.rolling_average_size == 14 %}selected{% endif %}>14 day rolling-avg</option>
-                            <option value=30 {% if page_model.rolling_average_size == 30 %}selected{% endif %}>30 day rolling-avg</option>
+                            <option value=1 {% if page_model.rolling_average_size == 1 %}selected{% endif %}>None
+                            </option>
+                            <option value=7 {% if page_model.rolling_average_size == 7 %}selected{% endif %}>7 day
+                                rolling-avg
+                            </option>
+                            <option value=14 {% if page_model.rolling_average_size == 14 %}selected{% endif %}>14 day
+                                rolling-avg
+                            </option>
+                            <option value=30 {% if page_model.rolling_average_size == 30 %}selected{% endif %}>30 day
+                                rolling-avg
+                            </option>
                         </select>
                     </div>
                 </form>
@@ -191,13 +240,11 @@
 
 </body>
 
-<script>
-    covid_tracker_form(
-        {{ page_model_json|safe }},
-        {{ avail_locations|safe }},
-        {{ avail_attributes|safe }},
-    );
-</script>
+{% if page_model_json %}
+    <script>
+        covid_tracker_form( {{ page_model_json | safe }}, {{ avail_locations | safe }}, {{ avail_attributes | safe }},);
+    </script>
+{% endif %}
 
 </html>
 
