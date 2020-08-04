@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="mx-5">
     <div class="my-5">
         <h5>What are the data sources?</h5>
         <div class="help">
@@ -19,7 +20,7 @@
             <ul>
                 {% for m in metrics %}
                     <li>
-                        <a target=_blank href="{{ m.value }}">{{ m.label }}</a>
+                        {{ m.label }}
                     </li>
                 {% endfor %}
             </ul>
@@ -60,5 +61,6 @@
             </ul>
         </div>
     </div>
+</div>
 
 {% endblock %}

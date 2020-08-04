@@ -27,6 +27,22 @@
     <script src="{% static 'vendor/chart.js/Chart.js' %}"></script>
     <script src="{% static 'vendor/underscore/underscore-min.js' %}"></script>
     <script src="{% static 'js/track19.all.min.js' %}"></script>
+
+    <style>
+        @media only screen and (max-width: 768px) {
+            .chart_card{
+                padding-left: 0;
+                padding-right: 0;
+            }
+            #main_content_container{
+                padding-left: 0;
+                padding-right: 0;
+            }
+            .navbar{
+                margin-bottom: 0 !important;
+            }
+        }
+    </style>
 </head>
 
 <body id="page-top">
@@ -51,26 +67,27 @@
                 </a>
 
 
-                <div class="topbar-divider d-none d-sm-block"></div>
+                <div class="topbar-divider"></div>
 
-                <button id="" class="btn btn-link" data-toggle="modal" data-target="#chart_configuration_modal">
+                <button id="" class="btn btn-link" data-toggle="modal" data-target="#chart_configuration_modal" title="Add Chart">
                     <i class="fa fa-plus-circle"></i>
-                    Add Chart
+                    <span class="d-md-inline d-none">Add Chart</span>
                 </button>
 
-                <a href="/?clear=true" class="btn btn-link">
+                {% if page_model %}
+                <a href="/?clear=true" class="btn btn-link" title="Clear Charts">
                     <i class="fas fa-trash-alt"></i>
-                    Clear Charts
+                    <span class="d-md-inline d-none">Clear Charts</span>
                 </a>
+                {% endif %}
 
-                <div class="topbar-divider d-none d-sm-block"></div>
 
                 <ul class="navbar-nav">
                     <!-- Nav Item - User Information -->
                     <li class="nav-item dropdown no-arrow">
-                        <a class="btn btn-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a class="btn btn-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Example Charts">
                             <i class="fas fa-chart-line"></i>
-                            Example Charts
+                            <span class="d-md-inline d-none">Examples</span>
                         </a>
                         <!-- Dropdown - User Information -->
                         <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
@@ -86,28 +103,35 @@
                 </ul>
 
                 {% if page_model %}
-                    <div class="topbar-divider d-none d-sm-block"></div>
-
-                    <a href="#" class="small text-gray-600" data-toggle="modal" data-target="#global_configuration_modal"
-                       style="white-space: normal">
-                        <i class="fa fa-cog"></i>
-                        {{ page_model.earliest_date|default_if_none:"Start of pandemic" }}
-                        to {{ page_model.latest_date|default_if_none:"today" }}
-                        {% if page_model.rolling_average_size != 1 %}
-                            smoothed to a {{ page_model.rolling_average_size }} day rolling-avg
-                        {% endif %}
-                    </a>
-
+                    <div class="d-sm-none">
+                        <a href="#" class="btn btn-link" data-toggle="modal" data-target="#global_configuration_modal" title="Charts Configuration">
+                            <i class="fa fa-cog"></i>
+                        </a>
+                    </div>
+                    <div class="d-md-inline d-none">
+                        <div class="topbar-divider"></div>
+                        <a href="#" class="small text-gray-600" data-toggle="modal" data-target="#global_configuration_modal"
+                           style="white-space: normal">
+                            <i class="fa fa-cog"></i>
+                            {{ page_model.earliest_date|default_if_none:"Start of pandemic" }}
+                            to {{ page_model.latest_date|default_if_none:"today" }}
+                            {% if page_model.rolling_average_size != 1 %}
+                                smoothed to a {{ page_model.rolling_average_size }} day rolling-avg
+                            {% endif %}
+                        </a>
+                    </div>
                 {% endif %}
 
-                <a href="{% url 'about' %}" class="ml-auto">About</a>
+                <div class="ml-auto d-md-inline d-none">
+                    <a href="{% url 'about' %}" class="">About</a>
+                </div>
 
 
             </nav>
             <!-- End of Topbar -->
 
             <!-- Begin Page Content -->
-            <div class="container-fluid">
+            <div class="container-fluid" id="main_content_container">
                 {% block content %}{% endblock %}
             </div>
             <!-- /.container-fluid -->
@@ -119,7 +143,7 @@
         <footer class="sticky-footer bg-white">
             <div class="container my-auto">
                 <div class="copyright text-center my-auto">
-                    <div>Data fresh as of {{ last_updated }}&nbsp;|&nbsp;Copyright &copy; 2020 Wadiddy, LLC CA</div>
+                    <div>Data fresh as of {{ last_updated }}&nbsp;|&nbsp;Copyright &copy; 2020 Wadiddy, LLC CA&nbsp;|&nbsp;<a href="{% url 'about' %}" class="ml-auto">About</a></div>
                 </div>
             </div>
         </footer>
@@ -237,6 +261,9 @@
     </div>
 </div>
 
+<div id="id_mobile_checker" class="d-sm-none">
+</div>
+
 
 </body>
 
@@ -250,4 +277,15 @@
 
 
 </body>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-174492326-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-174492326-1');
+</script>
+
 </html>

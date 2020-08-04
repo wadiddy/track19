@@ -162,7 +162,7 @@ def build_chart_data(page_model):
 						if scalar == 100000:
 							scalar_label = "100k"
 						elif scalar == 1000000:
-							scalar_label = "million people"
+							scalar_label = "1M"
 						else:
 							scalar_label = str(scalar)
 

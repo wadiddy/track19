@@ -6,10 +6,14 @@ function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
         map_attribute_label_value[a.value] = a.label;
     });
 
+    const show_tooltips = !$("#id_mobile_checker").is(":visible");
+    console.log("show_tooltips", show_tooltips);
+
     // Set new default font family and font color to mimic Bootstrap's default styling
     Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
     Chart.defaults.global.defaultFontColor = '#858796';
     Chart.defaults.global.animation.duration = 0;
+
     Chart.Legend.prototype.afterFit = function() {
         this.height = this.height + 20;
     };
@@ -62,8 +66,6 @@ function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
                 }
             }
         });
-
-        console.log(y_axis_list);
 
         let datasets = chart_data.series_list.map(function (series_data, idx) {
             var values = []
@@ -137,6 +139,7 @@ function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
                     }
                 },
                 tooltips: {
+                    enabled: show_tooltips,
                     backgroundColor: "rgb(255,255,255)",
                     bodyFontColor: "#858796",
                     titleMarginBottom: 10,
