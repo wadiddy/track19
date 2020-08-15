@@ -10,12 +10,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='rolluplocationattrrecentdelta',
-            name='id',
-            field=models.AutoField(auto_created=True, default=0, primary_key=True, serialize=False, verbose_name='ID'),
-            preserve_default=False,
-        ),
+        # migrations.AddField(
+        #     model_name='rolluplocationattrrecentdelta',
+        #     name='id',
+        #     field=models.AutoField(auto_created=True, default=0, primary_key=True, serialize=False, verbose_name='ID'),
+        #     preserve_default=False,
+        # ),
         migrations.AlterField(
             model_name='rolluplocationattrrecentdelta',
             name='token',
