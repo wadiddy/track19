@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="my-5 mx-1">
-        <h3>{{ attr_name }}</h3>
+        <h4><a href="{% url 'report_attr' attr_token %}">{{ attr_name }}</a></h4>
     </div>
 
     <div class="row">
@@ -11,7 +11,9 @@
             <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">{{ location_list.name }}</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <a href="{% url 'report_attr' attr_token location_list.list_token %}">{{ location_list.name }}</a>
+                    </h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
@@ -19,8 +21,8 @@
                         <tbody>
                             {% for l in location_list.data %}
                                 <tr>
-                                    <td width=75%><a href="{% url 'index_page' %}?loc={{ l.loc }}&attr={{ attr_token }}">{{ l.loc }}</a></td>
-                                    <td nowrap=true>{{ l.value|floatformat:1}}{{ location_list.suffix }}</td>
+                                    <td width=75%><a href="{% url 'index_page' %}?loc={{ l.loc }}&attr={{ attr_token }}{% for a2 in secondary_attrs %}&attr={{ a2 }}{% endfor %}">{{ l.loc }}</a></td>
+                                    <td nowrap=true>{{ l.value|floatformat:1}}{{ l.suffix }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

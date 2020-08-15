@@ -56,3 +56,25 @@ def parse_date(date_str):
 		return date_str.date()
 	else:
 		return dateparser.parse(date_str, date_formats=["%Y-%m-%d"])
+
+
+def format_date(d):
+	d = parse_date(d)
+	if d is None:
+		return None
+
+	day = d.day
+	suffix = 'th' if 11<=day<=13 else {1:'st',2:'nd',3:'rd'}.get(day%10, 'th')
+
+	return d.strftime("%b %d").lstrip("0").replace(" 0", " ") + suffix
+
+
+def flip_map(m_in):
+	return {v:k for k, v in m_in.items()}
+
+
+def filter_none(l):
+	if l is None:
+		return None
+
+	return [r for r in l if r is not None]

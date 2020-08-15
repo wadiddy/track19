@@ -1,4 +1,3 @@
-import pprint
 from collections import defaultdict
 from datetime import timedelta
 
@@ -48,6 +47,20 @@ QUERYABLE_ATTR_LABELS = {
 	QUERYABLE_ATTR_IN_HOSPITAL: "People hospitalized per 100k residents",
 	QUERYABLE_ATTR_IN_ICU: "People in ICU per 100k residents",
 }
+
+QUERYABLE_ATTR_RELATED_ATTRS = {
+	QUERYABLE_ATTR_POSITIVE_RATE: [QUERYABLE_ATTR_COVID_DEATHS],
+	QUERYABLE_ATTR_POSITIVE: [QUERYABLE_ATTR_COVID_DEATHS],
+	QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE: [QUERYABLE_ATTR_COVID_DEATHS],
+	QUERYABLE_ATTR_TOTAL_TESTS: [QUERYABLE_ATTR_COVID_DEATHS],
+	QUERYABLE_ATTR_COVID_DEATHS: [QUERYABLE_ATTR_OTHER_DEATHS],
+	QUERYABLE_ATTR_OTHER_DEATHS: [QUERYABLE_ATTR_COVID_DEATHS],
+	QUERYABLE_ATTR_ON_VENTILATOR: [QUERYABLE_ATTR_COVID_DEATHS],
+	QUERYABLE_ATTR_IN_HOSPITAL: [QUERYABLE_ATTR_COVID_DEATHS],
+	QUERYABLE_ATTR_IN_ICU: [QUERYABLE_ATTR_COVID_DEATHS],
+}
+
+
 
 MULTIPLE_LOCATION_HANDLING_SUM = "sum"
 MULTIPLE_LOCATION_HANDLING_AVG = "avg"
@@ -234,7 +247,7 @@ def build_report_caches():
 		for attr in QUERYABLE_ATTRS:
 			i = i + 1
 
-			attr_data = build_attr_data(
+			map_date_value = build_attr_data(
 				attr,
 				attr,
 				[l],
@@ -243,10 +256,14 @@ def build_report_caches():
 				14
 			)[0]
 
-			if len(attr_data) == 0:
+			if len(map_date_value) == 0:
 				continue
 
-			latest_date = common.parse_date(max(attr_data))
+			map_value_date = common.flip_map(map_date_value)
+			peak_value = max(map_value_date)
+			peak_value_date = map_value_date[peak_value]
+
+			latest_date = common.parse_date(max(map_date_value))
 			two_weeks_ago = latest_date - timedelta(days=14)
 			month_ago = latest_date - timedelta(days=30)
 
@@ -254,9 +271,9 @@ def build_report_caches():
 			dk_two_weeks_ago = common.get_date_key(two_weeks_ago)
 			dk_month_ago = common.get_date_key(month_ago)
 
-			v_latest_date = common.get(attr_data, dk_latest_date, 0)
-			v_two_weeks_ago = common.get(attr_data, dk_two_weeks_ago, 0)
-			v_month_ago = common.get(attr_data, dk_month_ago, 0)
+			v_latest_date = common.get(map_date_value, dk_latest_date, 0)
+			v_two_weeks_ago = common.get(map_date_value, dk_two_weeks_ago, 0)
+			v_month_ago = common.get(map_date_value, dk_month_ago, 0)
 
 			two_week_delta = (v_latest_date - v_two_weeks_ago) / v_two_weeks_ago if v_two_weeks_ago > 0 else 0
 			month_delta = (v_latest_date - v_month_ago) / v_month_ago if v_month_ago > 0 else 0
@@ -265,6 +282,8 @@ def build_report_caches():
 
 			try:
 				rollup_data = models.RollupLocationAttrRecentDelta.objects.get(k=k)
+				rollup_data.peak_date = peak_value_date
+				rollup_data.peak_value = peak_value
 				rollup_data.latest_date = latest_date
 				rollup_data.two_weeks_ago_date = two_weeks_ago
 				rollup_data.month_ago_date = month_ago
@@ -274,12 +293,13 @@ def build_report_caches():
 				rollup_data.two_week_delta = two_week_delta
 				rollup_data.month_delta = month_delta
 				rollup_data.save()
-				print(i, "existing", l.token, attr)
 			except models.RollupLocationAttrRecentDelta.DoesNotExist:
 				models.RollupLocationAttrRecentDelta(
 					k=k,
 					token=l.token,
 					attr=attr,
+					peak_date=peak_value_date,
+					peak_value=peak_value,
 					latest_date=latest_date,
 					two_weeks_ago_date=two_weeks_ago,
 					month_ago_date=month_ago,
@@ -289,9 +309,6 @@ def build_report_caches():
 					two_week_delta=two_week_delta,
 					month_delta=month_delta
 				).save()
-				print(i, "new", ",".join([str(v) for v in [l.token, attr, dk_latest_date, dk_two_weeks_ago, dk_month_ago, v_latest_date, v_two_weeks_ago, v_month_ago, two_week_delta, month_delta]]))
-
-				print(i, models.RollupLocationAttrRecentDelta.objects.all().count())
 
 
 class Accumulator():

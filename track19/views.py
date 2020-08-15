@@ -37,7 +37,7 @@ def index_page(request):
 	})
 
 
-def report_attr(request, attr=None):
+def report_attr(request, attr=None, expand_list=None):
 	map_attrs = {lv['value']: lv['label'] for lv in get_attr_labelvalues()}
 	if attr not in map_attrs:
 		attr = datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE
@@ -47,51 +47,51 @@ def report_attr(request, attr=None):
 	else:
 		suffix = ""
 
-	lists = [
-		{
-			"name": "Where's it bad today?",
-			"help": None,
-			"suffix": suffix,
-			"data": [{"loc": r.token, "value": r.latest_value} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-latest_value")[0:10]],
-		},
-		{
-			"name": "Where's it OK today?",
-			"suffix": suffix,
-			"data": [{"loc": r.token, "value": r.latest_value} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("latest_value")[0:10]]
-		},
-		{
-			"name": "Where's it getting worse over last 30 days?",
-			"suffix": "% worse",
-			"data": [{"loc": r.token, "value": abs(r.month_delta)} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-month_delta")[0:10]]
-		},
-		{
-			"name": "Where's it getting better over last 30 days?",
-			"suffix": "% better",
-			"data": [{"loc": r.token, "value": abs(r.month_delta)} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("month_delta")[0:10]]
-		},
-		{
-			"name": "Where's it getting worse over last two weeks?",
-			"suffix": "% worse",
-			"data": [{"loc": r.token, "value": abs(r.two_week_delta)} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-two_week_delta")[0:10]]
-		},
-		{
-			"name": "Where's it getting better over last two weeks?",
-			"suffix": "% better",
-			"data": [{"loc": r.token, "value": abs(r.two_week_delta)} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("two_week_delta")[0:10]]
-		},
-		{
-			"name": "All Locations",
-			"suffix": suffix,
-			"data": [{"loc": r.token, "value": r.latest_value} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-latest_value")]
-		},
-	]
+	lists = common.filter_none([
+		build_metric_table_data("bad_now", "Where's it bad right now?", attr, "latest_value", lambda r: suffix, True, expand_list),
+		# build_metric_table_data("ok_now", "Where's it OK right now?", attr, "latest_value", lambda r: suffix, False, expand_list),
+		# build_metric_table_data("worse_30d", "Where's it getting worse over last 30 days?", attr, "month_delta", "% worse", True, expand_list),
+		# build_metric_table_data("better_30d", "Where's it getting better over last 30 days?", attr, "month_delta", "% better", False, expand_list),
+		build_metric_table_data("worse", "Where's it getting worse over last two weeks?", attr, "two_week_delta", lambda r: "% worse" if r.two_week_delta > 0 else "% better", True, expand_list, filter_zero=True),
+		build_metric_table_data("better", "Where's it getting better over last two weeks?", attr, "two_week_delta", lambda r: "% worse" if r.two_week_delta > 0 else "% better", False, expand_list, filter_zero=True),
+		build_metric_table_data("highest_peak", "Who had the highest peak?", attr, "peak_value", lambda r: " on %s" % common.format_date(r.peak_date), True, expand_list),
+		build_metric_table_data("lowest_peak", "Who had the lowest peak?", attr, "peak_value", lambda r: " on %s" % common.format_date(r.peak_date), False, expand_list, filter_zero=True)
+	])
 
 	return _send_response(request, "report_attr.html", {
 		"location_lists": lists,
 		"attr_name": map_attrs[attr],
+		"secondary_attrs": datamodeling_service.QUERYABLE_ATTR_RELATED_ATTRS[attr],
 		"attr_token": attr
 	})
 
+
+def build_metric_table_data(list_token, name, query_attr, model_field_name, suffix_lambda, descending=False, expand_list=None, filter_zero=False):
+	if expand_list is not None and expand_list != list_token:
+		return None
+
+
+	data = [
+		{
+			"loc": r.token,
+			"value": abs(getattr(r, model_field_name)),
+			"suffix": suffix_lambda(r)
+		} for r in models.RollupLocationAttrRecentDelta.objects
+			                   .filter(attr=query_attr)
+			                   .order_by(("-" if descending else "") + model_field_name)
+	]
+
+	if filter_zero:
+		data = [d for d in data if d['value'] != 0.0]
+
+	if expand_list is None:
+		data = data[0:10]
+
+	return {
+		"list_token": list_token,
+		"name": name,
+		"data": data,
+	}
 
 
 def _send_response(request, tmpl, ctx=None):

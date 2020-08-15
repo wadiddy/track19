@@ -17,6 +17,7 @@ import track19.views
 urlpatterns = [
     path("", track19.views.index_page, name="index_page"),
     path("about", track19.views.about, name="about"),
+    path("metric/<attr>/<expand_list>", track19.views.report_attr, name="report_attr"),
     path("metric/<attr>", track19.views.report_attr, name="report_attr"),
     path("metric", track19.views.report_attr, name="report_attr"),
     path("api/v1/fetch", track19.views.api_vi_fetch, name="api_vi_fetch"),

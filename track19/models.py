@@ -108,6 +108,9 @@ class RollupLocationAttrRecentDelta(models.Model):
 	two_weeks_ago_date = models.DateField(null=True)
 	month_ago_date = models.DateField(null=True)
 
+	peak_date = models.DateField(null=True)
+	peak_value = models.FloatField(default=0)
+
 	latest_value = models.FloatField(default=0)
 	two_weeks_ago_value = models.FloatField(default=0)
 	month_ago_value = models.FloatField(default=0)
