@@ -10,10 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='rolluplocationattrrecentdelta',
-            name='id',
-        ),
         migrations.AddField(
             model_name='rolluplocationattrrecentdelta',
             name='k',
