@@ -7,29 +7,31 @@
 
     <div class="row">
     {% for location_list in location_lists %}
-        <div class="col-lg-4 chart_card">
-            <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <a href="{% url 'report_attr' attr_token location_list.list_token %}">{{ location_list.name }}</a>
-                    </h6>
-                </div>
-                <!-- Card Body -->
-                <div class="card-body">
-                    <table class="table table-striped table-sm">
-                        <tbody>
-                            {% for l in location_list.data %}
-                                <tr>
-                                    <td width=75%><a href="{% url 'index_page' %}?loc={{ l.loc }}&attr={{ attr_token }}{% for a2 in secondary_attrs %}&attr={{ a2 }}{% endfor %}">{{ l.loc }}</a></td>
-                                    <td nowrap=true>{{ l.value|floatformat:1}}{{ l.suffix }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        {% if location_list.data|length > 0 %}
+            <div class="col-lg-4 chart_card">
+                <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <a href="{% url 'report_attr' attr_token location_list.list_token %}">{{ location_list.name }}</a>
+                        </h6>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <table class="table table-striped table-sm">
+                            <tbody>
+                                {% for l in location_list.data %}
+                                    <tr>
+                                        <td width=75%><a href="{% url 'index_page' %}?loc={{ l.loc }}&attr={{ attr_token }}{% for a2 in secondary_attrs %}&attr={{ a2 }}{% endfor %}">{{ l.loc }}</a></td>
+                                        <td nowrap=true>{{ l.value|floatformat:1}}{{ l.suffix }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
     {% endfor %}
     </div>
 {% endblock %}

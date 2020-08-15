@@ -54,7 +54,7 @@ def report_attr(request, attr=None, expand_list=None):
 		# build_metric_table_data("better_30d", "Where's it getting better over last 30 days?", attr, "month_delta", "% better", False, expand_list),
 		build_metric_table_data("worse", "Where's it getting worse over last two weeks?", attr, "two_week_delta", lambda r: "% worse" if r.two_week_delta > 0 else "% better", True, expand_list, filter_zero=True),
 		build_metric_table_data("better", "Where's it getting better over last two weeks?", attr, "two_week_delta", lambda r: "% worse" if r.two_week_delta > 0 else "% better", False, expand_list, filter_zero=True),
-		build_metric_table_data("highest_peak", "Who had the highest peak?", attr, "peak_value", lambda r: " on %s" % common.format_date(r.peak_date), True, expand_list),
+		build_metric_table_data("highest_peak", "Who had the highest peak?", attr, "peak_value", lambda r: " on %s" % common.format_date(r.peak_date), True, expand_list, filter_zero=True),
 		build_metric_table_data("lowest_peak", "Who had the lowest peak?", attr, "peak_value", lambda r: " on %s" % common.format_date(r.peak_date), False, expand_list, filter_zero=True)
 	])
 
