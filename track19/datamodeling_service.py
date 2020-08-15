@@ -13,16 +13,16 @@ QUERYABLE_ATTR_ON_VENTILATOR = "on_ventilator"
 QUERYABLE_ATTR_IN_HOSPITAL = "in_hospital"
 QUERYABLE_ATTR_IN_ICU = "in_icu"
 QUERYABLE_ATTR_OTHER_DEATHS = "other_deaths"
+QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE = "percent_of_population_who_have_had_covid"
 
 QUERYABLE_ATTR_OTHER_DEATH_prefix = "other_death_"
 QUERYABLE_ATTR_OTHER_DEATH_ANY = QUERYABLE_ATTR_OTHER_DEATH_prefix + "_any"
 QUERYABLE_ATTR_OTHER_DEATH_HEART_DISEASE = QUERYABLE_ATTR_OTHER_DEATH_prefix + "_heart_disease_deaths"
 QUERYABLE_ATTR_OTHER_DEATH_CANCER = QUERYABLE_ATTR_OTHER_DEATH_prefix + "_cancer_deaths"
-QUERYABLE_ATTR_OTHER_DEATH_SMOKING   = QUERYABLE_ATTR_OTHER_DEATH_prefix + "_smoking_deaths"
+QUERYABLE_ATTR_OTHER_DEATH_SMOKING = QUERYABLE_ATTR_OTHER_DEATH_prefix + "_smoking_deaths"
 QUERYABLE_ATTR_OTHER_DEATH_OBESITY = QUERYABLE_ATTR_OTHER_DEATH_prefix + "_obesity_deaths"
 QUERYABLE_ATTR_OTHER_DEATH_ALCOHOL = QUERYABLE_ATTR_OTHER_DEATH_prefix + "_alcohol_deaths"
 QUERYABLE_ATTR_OTHER_DEATH_TYPICAL_FLU = QUERYABLE_ATTR_OTHER_DEATH_prefix + "_typical_flu_deaths"
-
 
 QUERYABLE_ATTRS = [
 	QUERYABLE_ATTR_POSITIVE_RATE,
@@ -32,12 +32,14 @@ QUERYABLE_ATTRS = [
 	# QUERYABLE_ATTR_ON_VENTILATOR,
 	QUERYABLE_ATTR_IN_HOSPITAL,
 	QUERYABLE_ATTR_IN_ICU,
-	QUERYABLE_ATTR_OTHER_DEATHS
+	QUERYABLE_ATTR_OTHER_DEATHS,
+	QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE,
 ]
 
 QUERYABLE_ATTR_LABELS = {
 	QUERYABLE_ATTR_POSITIVE_RATE: "Positive Test Rate",
 	QUERYABLE_ATTR_POSITIVE: "Tested Positive per 100k residents",
+	QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE: "Percent of population who've had Covid-19",
 	QUERYABLE_ATTR_TOTAL_TESTS: "Tests Performed per 100k residents",
 	QUERYABLE_ATTR_COVID_DEATHS: "Covid Deaths per million residents",
 	QUERYABLE_ATTR_OTHER_DEATHS: "Other Causes of Death per million residents",
@@ -53,7 +55,6 @@ MULTIPLE_LOCATION_HANDLING_OPTIONS = [
 	MULTIPLE_LOCATION_HANDLING_SUM,
 	MULTIPLE_LOCATION_HANDLING_AVG
 ]
-
 
 CAUSEOFDEATH_USYEARLYDEATHS = {
 	QUERYABLE_ATTR_OTHER_DEATH_ANY: 2813503,
@@ -96,7 +97,6 @@ ATTR_SCALAR = {
 	QUERYABLE_ATTR_IN_HOSPITAL: 100000,
 	QUERYABLE_ATTR_IN_ICU: 100000
 }
-
 
 
 def get_normalized_data(
@@ -174,3 +174,14 @@ def get_normalized_data(
 		map_date_smoothed_value[d] = numpy.average(value_list) if len(value_list) >= 0 else 0
 
 	return map_date_smoothed_value
+
+
+def build_report_caches():
+	pass
+
+
+class Accumulator():
+	total = 0
+	def accumulate(self, v):
+		self.total += v
+		return self.total

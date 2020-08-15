@@ -12,14 +12,25 @@ class MyJSONEncoder(DjangoJSONEncoder):
 			return super().default(o)
 
 
+def get_first(obj, attr, default_value=None):
+	v = get(obj, attr)
+	if v is None:
+		return default_value
+
+	if isinstance(v, list):
+		if len(v) == 0:
+			return default_value
+		else:
+			return v[0]
+
 def get_int(obj, attr, default_value=None):
 	try:
-		return int(get(obj, attr, default_value))
+		return int(get_first(obj, attr, default_value))
 	except:
 		return default_value
 
 def get_date(obj, attr, default_value=None):
-	return parse_date(get(obj, attr, default_value))
+	return parse_date(get_first(obj, attr, default_value))
 
 
 def get(obj, attr, default_value=None):

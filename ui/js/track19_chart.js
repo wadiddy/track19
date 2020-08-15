@@ -41,6 +41,7 @@ function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
             return axis_id;
         }))].map(function (axis_id, idx) {
             let axis_label = axis_id == "death" ? "Deaths per million people" : map_attribute_label_value[axis_id];
+
             return {
                 id: axis_id,
                 type: 'linear',

@@ -2,8 +2,9 @@ import json
 import pprint
 
 import dateparser
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.decorators.cache import cache_page
 
 from . import models, datamodeling_service, common, constants
@@ -11,7 +12,11 @@ from .common import MyJSONEncoder
 
 
 def index_page(request):
-	print("1")
+	if 'g' not in request.GET:
+		gq = models.GuidQuery.get(request)
+		if gq is not None:
+			return HttpResponseRedirect(reverse('index_page') + "?g=" + gq.guid)
+
 	if 'clear' in request.GET:
 		page_model = build_page_model(request)
 	else:
@@ -20,9 +25,8 @@ def index_page(request):
 			"locations": ["USA"],
 			"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
 		})
-	print("2")
+
 	chart_data = build_chart_data(page_model)
-	print("3", models.LocationDayData.objects.all().count())
 
 	return _send_response(request, "index.html", {
 		"chart_data": chart_data,
@@ -30,7 +34,7 @@ def index_page(request):
 		"page_model": page_model,
 		"page_model_json": json.dumps(page_model),
 		"avail_attributes": get_attr_labelvalues(),
-		"avail_locations": get_locations()
+		"avail_locations": models.Location.get_locations()
 	})
 
 
@@ -70,27 +74,34 @@ def about(request):
 
 
 def build_page_model(request, default_chart=None):
+	from track19 import datamodeling_service
+	request_dict = models.GuidQuery.get_query_dict(request)
+	pprint.pprint(request_dict)
+
 	page_model = {
-		"rolling_average_size": common.get_int(request.GET, 'ravg', '14'),
-		"earliest_date": common.get_date_key(common.get_date(request.GET, 'date_from', '2020-05-01')),
-		"latest_date": common.get_date_key(common.get_date(request.GET, 'date_to')),
+		"guid": common.get(request_dict, 'guid'),
+		"rolling_average_size": common.get_int(request_dict, 'ravg', '14'),
+		"earliest_date": common.get_date_key(common.get_date(request_dict, 'date_from', '2020-05-01')),
+		"latest_date": common.get_date_key(common.get_date(request_dict, 'date_to')),
 		"charts": []
 	}
 
-	all_location_tokens = [l['token'] for l in get_locations()]
-	for i in range(10):
-		suffix = "" if i == 0 else str(i)
-		locations = [l for l in request.GET.getlist("loc" + suffix) if l in all_location_tokens]
-		attributes = [a for a in request.GET.getlist("attr" + suffix) if a in datamodeling_service.QUERYABLE_ATTRS]
-		if len(locations) > 0 and len(attributes) > 0:
-			page_model['charts'].append({
-				"name": common.get(request.GET, "name" + suffix),
-				"locations": locations,
-				"attributes": attributes,
-			})
+	if 'clear' not in request_dict:
+		all_location_tokens = [l['token'] for l in models.Location.get_locations()]
+		for i in range(10):
+			suffix = "" if i == 0 else str(i)
+			locations = [l for l in common.get(request_dict, "loc" + suffix, []) if l in all_location_tokens]
+			attributes = [a for a in common.get(request_dict, "attr" + suffix, []) if a in datamodeling_service.QUERYABLE_ATTRS]
 
-	if len(page_model['charts']) == 0 and default_chart is not None:
-		page_model['charts'].append(default_chart)
+			if len(locations) > 0 and len(attributes) > 0:
+				page_model['charts'].append({
+					"name": common.get_first(request_dict, "name" + suffix),
+					"locations": locations,
+					"attributes": attributes,
+				})
+
+		if len(page_model['charts']) == 0 and default_chart is not None:
+			page_model['charts'].append(default_chart)
 
 	return page_model
 
@@ -102,7 +113,7 @@ def api_vi_attributes(request):
 
 @cache_page(60 * 5)
 def api_vi_locations(request):
-	return send_api_response(get_locations())
+	return send_api_response(models.Location.get_locations())
 
 
 @cache_page(60 * 5)
@@ -179,9 +190,15 @@ def build_chart_data(page_model):
 					if attr.startswith(datamodeling_service.QUERYABLE_ATTR_OTHER_DEATH_prefix):
 						function_get_value = lambda ldd: float(
 							datamodeling_service.CAUSEOFDEATH_USYEARLYDEATHS[attr]) / (
-									                                 365.0 * float(constants.USA_POPULATION))
+								                                 365.0 * float(constants.USA_POPULATION))
 						normalize_by_population = False
 						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
+					elif attr == datamodeling_service.QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE:
+						scalar = 100
+						normalize_by_population = True
+						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
+						accumulator = datamodeling_service.Accumulator()
+						function_get_value = lambda ldd: accumulator.accumulate(ldd.positive)
 					elif attr == datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE:
 						scalar = 100
 						normalize_by_population = False
@@ -230,30 +247,6 @@ def send_api_response(payload):
 		'api_version': 1,
 		'payload': payload,
 	}, encoder=MyJSONEncoder)
-
-
-def get_locations():
-	locations = []
-	for lg in models.LocationGroup.objects.all():
-		group_population = 0
-		for l in models.Location.objects.filter(pk__in=[lgl.location_id for lgl in lg.locationgrouplocation_set.all()]):
-			group_population += l.population
-		locations.append({
-			"type": "location_group",
-			"token": lg.token,
-			"name": lg.name,
-			"population": group_population
-		})
-
-	for l in models.Location.objects.all():
-		locations.append({
-			"type": "location",
-			"token": l.token,
-			"name": l.token,
-			"population": l.population
-		})
-
-	return locations
 
 
 def get_attr_labelvalues():
