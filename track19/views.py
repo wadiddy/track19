@@ -33,18 +33,72 @@ def index_page(request):
 		"chart_data_json": json.dumps(chart_data),
 		"page_model": page_model,
 		"page_model_json": json.dumps(page_model),
-		"avail_attributes": get_attr_labelvalues(),
 		"avail_locations": models.Location.get_locations()
 	})
 
 
 def report_attr(request, attr=None):
-	pass
+	map_attrs = {lv['value']: lv['label'] for lv in get_attr_labelvalues()}
+	if attr not in map_attrs:
+		attr = datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE
+
+	if attr in [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]:
+		suffix = "%"
+	else:
+		suffix = ""
+
+	lists = [
+		{
+			"name": "Bad Locations",
+			"help": None,
+			"suffix": suffix,
+			"data": [{"loc": r.token, "value": r.latest_value} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-latest_value")[0:10]],
+		},
+		{
+			"name": "Good Locations",
+			"suffix": suffix,
+			"data": [{"loc": r.token, "value": r.latest_value} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("latest_value")[0:10]]
+		},
+		{
+			"name": "Percent worse over last 30 days",
+			"suffix": "%",
+			"data": [{"loc": r.token, "value": r.month_delta} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-month_delta")[0:10]]
+		},
+		{
+			"name": "Percent better over last 30 days",
+			"suffix": "%",
+			"data": [{"loc": r.token, "value": r.month_delta} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("month_delta")[0:10]]
+		},
+		{
+			"name": "Percent worse over last 14 days",
+			"suffix": "%",
+			"data": [{"loc": r.token, "value": r.two_week_delta} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-two_week_delta")[0:10]]
+		},
+		{
+			"name": "Percent better over last 14 days",
+			"suffix": "%",
+			"data": [{"loc": r.token, "value": r.two_week_delta} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("two_week_delta")[0:10]]
+		},
+		{
+			"name": "All Locations",
+			"suffix": suffix,
+			"data": [{"loc": r.token, "value": r.latest_value} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-latest_value")]
+		},
+	]
+
+	return _send_response(request, "report_attr.html", {
+		"location_lists": lists,
+		"attr_name": map_attrs[attr],
+		"attr_token": attr
+	})
+
 
 
 def _send_response(request, tmpl, ctx=None):
 	if ctx is None:
 		ctx = {}
+
+	ctx["avail_attributes"] = get_attr_labelvalues()
 
 	ctx["last_updated"] = models.LocationDayData.objects.all().order_by("-date")[0].date
 

@@ -17,8 +17,8 @@ import track19.views
 urlpatterns = [
     path("", track19.views.index_page, name="index_page"),
     path("about", track19.views.about, name="about"),
-    path("report_attr", track19.views.report_attr, name="report_attr"),
-    path("report_attr", track19.views.report_attr, name="report_attr"),
+    path("metric/<attr>", track19.views.report_attr, name="report_attr"),
+    path("metric", track19.views.report_attr, name="report_attr"),
     path("api/v1/fetch", track19.views.api_vi_fetch, name="api_vi_fetch"),
     path("api/v1/locations", track19.views.api_vi_locations, name="api_vi_locations"),
     path("api/v1/attributes", track19.views.api_vi_attributes, name="api_vi_attributes"),
