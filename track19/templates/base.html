@@ -72,6 +72,23 @@
                 <div class="topbar-divider"></div>
 
                 <ul class="navbar-nav">
+
+                <li>
+                    <button id="" class="btn btn-link" data-toggle="modal" data-target="#chart_configuration_modal" title="Add Chart">
+                        <i class="fa fa-plus-circle"></i>
+                        <span class="d-xl-inline d-none">Add Chart</span>
+                    </button>
+                </li>
+
+                {% if page_model %}
+                    <li>
+                        <a href="/?clear=true" class="btn btn-link" title="Clear Charts">
+                            <i class="fas fa-trash-alt"></i>
+                            <span class="d-xl-inline d-none">Clear Charts</span>
+                        </a>
+                    </li>
+                {% endif %}
+
                     <!-- Nav Item - User Information -->
                     <li class="nav-item dropdown no-arrow">
                         <a class="btn btn-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Example Charts">
@@ -90,21 +107,8 @@
                     </li>
 
 
-                <button id="" class="btn btn-link" data-toggle="modal" data-target="#chart_configuration_modal" title="Add Chart">
-                    <i class="fa fa-plus-circle"></i>
-                    <span class="d-xl-inline d-none">Add Chart</span>
-                </button>
 
-
-                {% if page_model %}
-                <a href="/?clear=true" class="btn btn-link" title="Clear Charts">
-                    <i class="fas fa-trash-alt"></i>
-                    <span class="d-xl-inline d-none">Clear Charts</span>
-                </a>
-                {% endif %}
-
-
-                <div class="topbar-divider"></div>
+                    <div class="topbar-divider"></div>
                 <li class="nav-item dropdown no-arrow">
                     <a class="btn btn-link dropdown-toggle" href="#" id="attr_dropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Example Charts">
                         <i class="fas fa-list"></i>
