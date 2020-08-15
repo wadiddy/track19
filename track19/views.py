@@ -91,7 +91,8 @@ def build_page_model(request, default_chart=None):
 		for i in range(10):
 			suffix = "" if i == 0 else str(i)
 			locations = [l for l in common.get(request_dict, "loc" + suffix, []) if l in all_location_tokens]
-			attributes = [a for a in common.get(request_dict, "attr" + suffix, []) if a in datamodeling_service.QUERYABLE_ATTRS]
+			attributes = [a for a in common.get(request_dict, "attr" + suffix, []) if
+			              a in datamodeling_service.QUERYABLE_ATTRS]
 
 			if len(locations) > 0 and len(attributes) > 0:
 				page_model['charts'].append({
@@ -166,8 +167,14 @@ def build_chart_data(page_model):
 					attrs = [attr_token]
 
 				for attr in attrs:
-					attr_label = attr.replace("_", " ").title().replace("Other Death", "").strip()
-					scalar = common.get(datamodeling_service.ATTR_SCALAR, attr, 1)
+					attr_data, attr_label, scalar = datamodeling_service.build_attr_data(
+						attr_token,
+						attr,
+						locations,
+						earliest_date,
+						latest_date,
+						rolling_average_size
+					)
 
 					if scalar > 1:
 						if scalar == 100000:
@@ -187,53 +194,17 @@ def build_chart_data(page_model):
 						else:
 							series_name = "%s in %s" % (attr_label, " & ".join(location_names))
 
-					if attr.startswith(datamodeling_service.QUERYABLE_ATTR_OTHER_DEATH_prefix):
-						function_get_value = lambda ldd: float(
-							datamodeling_service.CAUSEOFDEATH_USYEARLYDEATHS[attr]) / (
-								                                 365.0 * float(constants.USA_POPULATION))
-						normalize_by_population = False
-						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
-					elif attr == datamodeling_service.QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE:
-						scalar = 100
-						normalize_by_population = True
-						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
-						accumulator = datamodeling_service.Accumulator()
-						function_get_value = lambda ldd: accumulator.accumulate(ldd.positive)
-					elif attr == datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE:
-						scalar = 100
-						normalize_by_population = False
-						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_AVG
-						function_get_value = lambda ldd: min(1, float(ldd.positive) / float(ldd.total_tests))
-					else:
-						attr_label = attr_label + "s"
-						normalize_by_population = True
-						multiple_location_handling = datamodeling_service.MULTIPLE_LOCATION_HANDLING_SUM
-						if attr_token == datamodeling_service.QUERYABLE_ATTR_COVID_DEATHS:
-							query_attr = "deaths"
-						else:
-							query_attr = attr
-						function_get_value = lambda ldd: float(getattr(ldd, query_attr, 0))
+					d = {
+						"type": "series",
+						"name": series_name,
+						"location": loc_tokens,
+						"population": total_population,
+						"attr": attr,
+						"rolling_average_size": rolling_average_size,
+						"data": attr_data
+					}
 
-					series_list.append(
-						{
-							"type": "series",
-							"name": series_name,
-							"location": loc_tokens,
-							"population": total_population,
-							"attr": attr,
-							"rolling_average_size": rolling_average_size,
-							"data": datamodeling_service.get_normalized_data(
-								locations,
-								function_get_value,
-								scalar,
-								earliest_date,
-								latest_date,
-								multiple_location_handling=multiple_location_handling,
-								rolling_average_size=rolling_average_size,
-								normalize_by_population=normalize_by_population
-							)
-						}
-					)
+					series_list.append(d)
 			chart_data["name"] = chart_meta['name']
 			if chart_data["name"] is None:
 				all_attrs = [attr.replace("_", " ").title() for attr in chart_meta['attributes']]

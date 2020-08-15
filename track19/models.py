@@ -95,6 +95,25 @@ class Location(models.Model):
 
 		return locations
 
+@auto_str
+class RollupLocationAttrRecentDelta(models.Model):
+	token = models.TextField()
+	attr = models.TextField()
+
+	class Meta:
+		unique_together = ('token', 'attr',)
+
+	latest_date = models.DateField(null=True)
+	two_weeks_ago_date = models.DateField(null=True)
+	month_ago_date = models.DateField(null=True)
+
+	latest_value = models.FloatField(default=0)
+	two_weeks_ago_value = models.FloatField(default=0)
+	month_ago_value = models.FloatField(default=0)
+
+	two_week_delta = models.FloatField(default=0)
+	month_delta = models.FloatField(default=0)
+
 
 @auto_str
 class LocationDayData(models.Model):

@@ -1,9 +1,10 @@
+import pprint
 from collections import defaultdict
 from datetime import timedelta
 
 import numpy
 
-from track19 import common
+from track19 import common, models, constants
 
 QUERYABLE_ATTR_POSITIVE_RATE = "positive_rate"
 QUERYABLE_ATTR_POSITIVE = "positive"
@@ -99,6 +100,54 @@ ATTR_SCALAR = {
 }
 
 
+def build_attr_data(
+		attr_token,
+		attr,
+		locations,
+		earliest_date,
+		latest_date,
+		rolling_average_size
+):
+	attr_label = attr.replace("_", " ").title().replace("Other Death", "").strip()
+	scalar = common.get(ATTR_SCALAR, attr, 1)
+
+	if attr.startswith(QUERYABLE_ATTR_OTHER_DEATH_prefix):
+		function_get_value = lambda ldd: float(
+			CAUSEOFDEATH_USYEARLYDEATHS[attr]) / (365.0 * float(constants.USA_POPULATION))
+		normalize_by_population = False
+		multiple_location_handling = MULTIPLE_LOCATION_HANDLING_AVG
+	elif attr == QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE:
+		scalar = 100
+		normalize_by_population = True
+		multiple_location_handling = MULTIPLE_LOCATION_HANDLING_AVG
+		accumulator = Accumulator()
+		function_get_value = lambda ldd: accumulator.accumulate(ldd.positive)
+	elif attr == QUERYABLE_ATTR_POSITIVE_RATE:
+		scalar = 100
+		normalize_by_population = False
+		multiple_location_handling = MULTIPLE_LOCATION_HANDLING_AVG
+		function_get_value = lambda ldd: min(1, float(ldd.positive) / float(ldd.total_tests))
+	else:
+		normalize_by_population = True
+		multiple_location_handling = MULTIPLE_LOCATION_HANDLING_SUM
+		if attr_token == QUERYABLE_ATTR_COVID_DEATHS:
+			query_attr = "deaths"
+		else:
+			query_attr = attr
+		function_get_value = lambda ldd: float(getattr(ldd, query_attr, 0))
+	attr_data = get_normalized_data(
+		locations,
+		function_get_value,
+		scalar,
+		earliest_date,
+		latest_date,
+		multiple_location_handling=multiple_location_handling,
+		rolling_average_size=rolling_average_size,
+		normalize_by_population=normalize_by_population
+	)
+	return attr_data, attr_label, scalar
+
+
 def get_normalized_data(
 		locations,
 		function_get_value,
@@ -122,6 +171,9 @@ def get_normalized_data(
 	total_population = 0
 
 	populations_list = []
+	if not isinstance(locations, list):
+		locations = [locations]
+
 	for location in locations:
 		total_population += location.population
 
@@ -177,11 +229,71 @@ def get_normalized_data(
 
 
 def build_report_caches():
-	pass
+	i = 0
+	for l in models.Location.objects.all():
+		for attr in QUERYABLE_ATTRS:
+			i = i + 1
+
+			attr_data = build_attr_data(
+				attr,
+				attr,
+				[l],
+				None,
+				None,
+				14
+			)[0]
+
+			if len(attr_data) == 0:
+				continue
+
+			latest_date = common.parse_date(max(attr_data))
+			two_weeks_ago = latest_date - timedelta(days=14)
+			month_ago = latest_date - timedelta(days=30)
+
+			dk_latest_date = common.get_date_key(latest_date)
+			dk_two_weeks_ago = common.get_date_key(two_weeks_ago)
+			dk_month_ago = common.get_date_key(month_ago)
+
+			v_latest_date = common.get(attr_data, dk_latest_date, 0)
+			v_two_weeks_ago = common.get(attr_data, dk_two_weeks_ago, 0)
+			v_month_ago = common.get(attr_data, dk_month_ago, 0)
+
+			two_week_delta = (v_latest_date - v_two_weeks_ago) / v_two_weeks_ago if v_two_weeks_ago > 0 else 0
+			month_delta = (v_latest_date - v_month_ago) / v_month_ago if v_month_ago > 0 else 0
+
+			try:
+				rollup_data = models.RollupLocationAttrRecentDelta.objects.get(token=l.token, attr=attr)
+				rollup_data.latest_date = latest_date
+				rollup_data.two_weeks_ago_date = two_weeks_ago
+				rollup_data.month_ago_date = month_ago
+				rollup_data.latest_value = v_latest_date
+				rollup_data.two_weeks_ago_value = v_two_weeks_ago
+				rollup_data.month_ago_value = v_month_ago
+				rollup_data.two_week_delta = two_week_delta
+				rollup_data.month_delta = month_delta
+				rollup_data.save()
+				print(i, "existing", l.token, attr)
+			except models.RollupLocationAttrRecentDelta.DoesNotExist:
+				models.RollupLocationAttrRecentDelta(
+					token=l.token,
+					attr=attr,
+					latest_date=latest_date,
+					two_weeks_ago_date=two_weeks_ago,
+					month_ago_date=month_ago,
+					latest_value=v_latest_date,
+					two_weeks_ago_value=v_two_weeks_ago,
+					month_ago_value=v_month_ago,
+					two_week_delta=two_week_delta,
+					month_delta=month_delta
+				).save()
+				print(i, "new", ",".join([str(v) for v in [l.token, attr, dk_latest_date, dk_two_weeks_ago, dk_month_ago, v_latest_date, v_two_weeks_ago, v_month_ago, two_week_delta, month_delta]]))
+
+				print(i, models.RollupLocationAttrRecentDelta.objects.all().count())
 
 
 class Accumulator():
 	total = 0
+
 	def accumulate(self, v):
 		self.total += v
 		return self.total
