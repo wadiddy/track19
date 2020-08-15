@@ -261,8 +261,10 @@ def build_report_caches():
 			two_week_delta = (v_latest_date - v_two_weeks_ago) / v_two_weeks_ago if v_two_weeks_ago > 0 else 0
 			month_delta = (v_latest_date - v_month_ago) / v_month_ago if v_month_ago > 0 else 0
 
+			k = "___".join([l.token, attr])
+
 			try:
-				rollup_data = models.RollupLocationAttrRecentDelta.objects.get(token=l.token, attr=attr)
+				rollup_data = models.RollupLocationAttrRecentDelta.objects.get(k=k)
 				rollup_data.latest_date = latest_date
 				rollup_data.two_weeks_ago_date = two_weeks_ago
 				rollup_data.month_ago_date = month_ago
@@ -275,6 +277,7 @@ def build_report_caches():
 				print(i, "existing", l.token, attr)
 			except models.RollupLocationAttrRecentDelta.DoesNotExist:
 				models.RollupLocationAttrRecentDelta(
+					k=k,
 					token=l.token,
 					attr=attr,
 					latest_date=latest_date,

@@ -38,6 +38,10 @@ def index_page(request):
 	})
 
 
+def report_attr(request, attr=None):
+	pass
+
+
 def _send_response(request, tmpl, ctx=None):
 	if ctx is None:
 		ctx = {}

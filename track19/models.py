@@ -97,6 +97,7 @@ class Location(models.Model):
 
 @auto_str
 class RollupLocationAttrRecentDelta(models.Model):
+	k = models.TextField(primary_key=True, default="0")
 	token = models.TextField()
 	attr = models.TextField()
 
