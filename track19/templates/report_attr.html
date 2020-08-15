@@ -20,7 +20,7 @@
                             {% for l in location_list.data %}
                                 <tr>
                                     <td width=75%><a href="{% url 'index_page' %}?loc={{ l.loc }}&attr={{ attr_token }}">{{ l.loc }}</a></td>
-                                    <td>{{ l.value|floatformat:1}}{{ location_list.suffix }}</td>
+                                    <td nowrap=true>{{ l.value|floatformat:1}}{{ location_list.suffix }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

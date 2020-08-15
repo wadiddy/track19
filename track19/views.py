@@ -49,35 +49,35 @@ def report_attr(request, attr=None):
 
 	lists = [
 		{
-			"name": "Bad Locations",
+			"name": "Where's it bad today?",
 			"help": None,
 			"suffix": suffix,
 			"data": [{"loc": r.token, "value": r.latest_value} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-latest_value")[0:10]],
 		},
 		{
-			"name": "Good Locations",
+			"name": "Where's it OK today?",
 			"suffix": suffix,
 			"data": [{"loc": r.token, "value": r.latest_value} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("latest_value")[0:10]]
 		},
 		{
-			"name": "Percent worse over last 30 days",
-			"suffix": "%",
-			"data": [{"loc": r.token, "value": r.month_delta} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-month_delta")[0:10]]
+			"name": "Where's it getting worse over last 30 days?",
+			"suffix": "% worse",
+			"data": [{"loc": r.token, "value": abs(r.month_delta)} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-month_delta")[0:10]]
 		},
 		{
-			"name": "Percent better over last 30 days",
-			"suffix": "%",
-			"data": [{"loc": r.token, "value": r.month_delta} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("month_delta")[0:10]]
+			"name": "Where's it getting better over last 30 days?",
+			"suffix": "% better",
+			"data": [{"loc": r.token, "value": abs(r.month_delta)} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("month_delta")[0:10]]
 		},
 		{
-			"name": "Percent worse over last 14 days",
-			"suffix": "%",
-			"data": [{"loc": r.token, "value": r.two_week_delta} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-two_week_delta")[0:10]]
+			"name": "Where's it getting worse over last two weeks?",
+			"suffix": "% worse",
+			"data": [{"loc": r.token, "value": abs(r.two_week_delta)} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("-two_week_delta")[0:10]]
 		},
 		{
-			"name": "Percent better over last 14 days",
-			"suffix": "%",
-			"data": [{"loc": r.token, "value": r.two_week_delta} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("two_week_delta")[0:10]]
+			"name": "Where's it getting better over last two weeks?",
+			"suffix": "% better",
+			"data": [{"loc": r.token, "value": abs(r.two_week_delta)} for r in models.RollupLocationAttrRecentDelta.objects.filter(attr=attr).order_by("two_week_delta")[0:10]]
 		},
 		{
 			"name": "All Locations",
