@@ -133,10 +133,10 @@ def about(request):
 
 def build_page_model(request, default_chart=None):
 	from track19 import datamodeling_service
-	request_dict = models.GuidQuery.get_query_dict(request)
-	pprint.pprint(request_dict)
+	request_dict, guid_query = models.GuidQuery.get_query_dict(request)
 
 	page_model = {
+		"api_url": reverse(api_v1_fetch) + ("?" + guid_query.query if guid_query is not None else ""),
 		"guid": common.get(request_dict, 'guid'),
 		"rolling_average_size": common.get_int(request_dict, 'ravg', '14'),
 		"earliest_date": common.get_date_key(common.get_date(request_dict, 'date_from', '2020-05-01')),
@@ -166,17 +166,17 @@ def build_page_model(request, default_chart=None):
 
 
 @cache_page(60 * 5)
-def api_vi_attributes(request):
+def api_v1_attributes(request):
 	return send_api_response(get_attr_labelvalues())
 
 
 @cache_page(60 * 5)
-def api_vi_locations(request):
+def api_v1_locations(request):
 	return send_api_response(models.Location.get_locations())
 
 
 @cache_page(60 * 5)
-def api_vi_fetch(request):
+def api_v1_fetch(request):
 	return send_api_response(
 		build_chart_data(
 			build_page_model(request)

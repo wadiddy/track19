@@ -38,11 +38,11 @@ class GuidQuery(models.Model):
 	def get_query_dict(request):
 		gq = GuidQuery.get(request)
 		if gq is None:
-			return {}
+			return {}, None
 		else:
 			d = dict(QueryDict(gq.query).lists())
 			d['guid'] = gq.guid
-			return d
+			return d, gq
 
 
 	@staticmethod

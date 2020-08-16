@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import numpy
 
@@ -148,7 +148,9 @@ def build_attr_data(
 		else:
 			query_attr = attr
 		function_get_value = lambda ldd: float(getattr(ldd, query_attr, 0))
+
 	attr_data = get_normalized_data(
+		attr,
 		locations,
 		function_get_value,
 		scalar,
@@ -162,6 +164,7 @@ def build_attr_data(
 
 
 def get_normalized_data(
+		attr,
 		locations,
 		function_get_value,
 		scalar=1,
@@ -173,6 +176,12 @@ def get_normalized_data(
 ):
 	if multiple_location_handling not in MULTIPLE_LOCATION_HANDLING_OPTIONS:
 		multiple_location_handling = MULTIPLE_LOCATION_HANDLING_SUM
+
+	if earliest_date is None:
+		earliest_date = models.LocationDayData.objects.all().order_by("date")[0].date
+
+	if latest_date is None:
+		latest_date = models.LocationDayData.objects.all().order_by("-date")[0].date
 
 	try:
 		rolling_average_size = int(rolling_average_size)
@@ -190,41 +199,39 @@ def get_normalized_data(
 	for location in locations:
 		total_population += location.population
 
-		if earliest_date is None and latest_date is None:
-			ldds = location.locationdaydata_set.all()
-		elif earliest_date is not None and latest_date is not None:
-			ldds = location.locationdaydata_set.filter(date__gte=earliest_date, date__lte=latest_date)
-		elif earliest_date is not None and latest_date is None:
-			ldds = location.locationdaydata_set.filter(date__gte=earliest_date)
-		elif earliest_date is None and latest_date is not None:
-			ldds = location.locationdaydata_set.filter(date__lte=latest_date)
-		else:
-			raise Exception("should never happen")
+		ldds_map = {common.get_date_key(ldd.date): ldd for ldd in location.locationdaydata_set.filter(date__gte=earliest_date, date__lte=latest_date)}
 
-		for ldd in ldds:
-			try:
-				v = function_get_value(ldd)
-			except:
+		for date_key in common.get_datekeys_between(earliest_date, latest_date):
+			ldd = common.get(ldds_map, date_key)
+			if ldd is None:
 				v = None
+			else:
+				try:
+					v = function_get_value(ldd)
+				except:
+					v = None
 
+			d = common.parse_date(date_key)
+			dict_date_values[d].append(v)
 			if v is not None:
-				dict_date_values[ldd.date].append(v)
-				dict_date_populations[ldd.date].append(location.population)
+				dict_date_populations[d].append(location.population)
 
 	map_date_normalized_value = {}
 	for d, values in dict_date_values.items():
-		if len(values) == 0:
-			total_value = 0
-		elif multiple_location_handling == MULTIPLE_LOCATION_HANDLING_SUM:
-			total_value = sum(values)
-		elif multiple_location_handling == MULTIPLE_LOCATION_HANDLING_AVG:
-			total_value = numpy.average(values, weights=dict_date_populations[d])
-		else:
-			raise Exception("Invalid MULTIPLE_LOCATION_HANDLING " + multiple_location_handling)
+		values = common.filter_none(values)
 
-		normalized_value = float(scalar) * float(total_value) / (
-			float(total_population) if normalize_by_population else 1)
-		map_date_normalized_value[d] = normalized_value
+		if len(values) == 0:
+			map_date_normalized_value[d] = None
+		else:
+			if multiple_location_handling == MULTIPLE_LOCATION_HANDLING_SUM:
+				total_value = sum(values)
+			elif multiple_location_handling == MULTIPLE_LOCATION_HANDLING_AVG:
+				total_value = numpy.average(values, weights=dict_date_populations[d])
+			else:
+				raise Exception("Invalid MULTIPLE_LOCATION_HANDLING " + multiple_location_handling)
+
+			normalized_value = float(scalar) * float(total_value) / (float(total_population) if normalize_by_population else 1)
+			map_date_normalized_value[d] = normalized_value
 
 	dict_date_rolling_values = defaultdict(list)
 	for d in map_date_normalized_value:
@@ -235,8 +242,8 @@ def get_normalized_data(
 
 	map_date_smoothed_value = {}
 	for d in sorted(dict_date_rolling_values):
-		value_list = dict_date_rolling_values[d]
-		map_date_smoothed_value[d] = numpy.average(value_list) if len(value_list) >= 0 else 0
+		value_list = common.filter_none(common.get(dict_date_rolling_values, d, []))
+		map_date_smoothed_value[d] = numpy.average(value_list) if len(value_list) > 0 else None
 
 	return map_date_smoothed_value
 
@@ -260,8 +267,12 @@ def build_report_caches():
 				continue
 
 			map_value_date = common.flip_map(map_date_value)
-			peak_value = max(map_value_date)
-			peak_value_date = map_value_date[peak_value]
+			if len(map_value_date) == 0:
+				peak_value = 0
+				peak_value_date = datetime.today()
+			else:
+				peak_value = max(map_value_date)
+				peak_value_date = map_value_date[peak_value]
 
 			latest_date = common.parse_date(max(map_date_value))
 			two_weeks_ago = latest_date - timedelta(days=14)
@@ -271,9 +282,9 @@ def build_report_caches():
 			dk_two_weeks_ago = common.get_date_key(two_weeks_ago)
 			dk_month_ago = common.get_date_key(month_ago)
 
-			v_latest_date = common.get(map_date_value, dk_latest_date, 0)
-			v_two_weeks_ago = common.get(map_date_value, dk_two_weeks_ago, 0)
-			v_month_ago = common.get(map_date_value, dk_month_ago, 0)
+			v_latest_date = common.default(common.get(map_date_value, dk_latest_date), 0)
+			v_two_weeks_ago = common.default(common.get(map_date_value, dk_two_weeks_ago), 0)
+			v_month_ago = common.default(common.get(map_date_value, dk_month_ago), 0)
 
 			two_week_delta = (v_latest_date - v_two_weeks_ago) / v_two_weeks_ago if v_two_weeks_ago > 0 else 0
 			month_delta = (v_latest_date - v_month_ago) / v_month_ago if v_month_ago > 0 else 0
