@@ -58,7 +58,8 @@ def parse_date(date_str):
 	elif isinstance(date_str, datetime.datetime):
 		return date_str.date()
 	else:
-		return dateparser.parse(date_str, date_formats=["%Y-%m-%d"])
+		date_str = date_str.split(" ")[0]
+		return dateparser.parse(date_str, date_formats=["%Y-%m-%d", "%Y/%m/%d"])
 
 
 def format_date(d):

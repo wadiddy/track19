@@ -38,6 +38,7 @@ def index_page(request):
 
 
 def report_attr(request, attr=None, expand_list=None):
+	loc_name_map = {l.token:l.name for l in models.Location.objects.all()}
 	map_attrs = {lv['value']: lv['label'] for lv in get_attr_labelvalues()}
 	if attr not in map_attrs:
 		attr = datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE
@@ -48,14 +49,14 @@ def report_attr(request, attr=None, expand_list=None):
 		suffix = ""
 
 	lists = common.filter_none([
-		build_metric_table_data("bad_now", "Where's it bad right now?", attr, "latest_value", lambda r: suffix, True, expand_list),
-		# build_metric_table_data("ok_now", "Where's it OK right now?", attr, "latest_value", lambda r: suffix, False, expand_list),
-		# build_metric_table_data("worse_30d", "Where's it getting worse over last 30 days?", attr, "month_delta", "% worse", True, expand_list),
-		# build_metric_table_data("better_30d", "Where's it getting better over last 30 days?", attr, "month_delta", "% better", False, expand_list),
-		build_metric_table_data("worse", "Where's it getting worse over last two weeks?", attr, "two_week_delta", lambda r: "% worse" if r.two_week_delta > 0 else "% better", True, expand_list, filter_zero=True),
-		build_metric_table_data("better", "Where's it getting better over last two weeks?", attr, "two_week_delta", lambda r: "% worse" if r.two_week_delta > 0 else "% better", False, expand_list, filter_zero=True),
-		build_metric_table_data("highest_peak", "Who had the highest peak?", attr, "peak_value", lambda r: " on %s" % common.format_date(r.peak_date), True, expand_list, filter_zero=True),
-		build_metric_table_data("lowest_peak", "Who had the lowest peak?", attr, "peak_value", lambda r: " on %s" % common.format_date(r.peak_date), False, expand_list, filter_zero=True)
+		build_metric_table_data(loc_name_map, "bad_now", "Where's it bad right now?", attr, "latest_value", lambda r: suffix, True, expand_list),
+		# build_metric_table_data(loc_name_map, "ok_now", "Where's it OK right now?", attr, "latest_value", lambda r: suffix, False, expand_list),
+		# build_metric_table_data(loc_name_map, "worse_30d", "Where's it getting worse over last 30 days?", attr, "month_delta", "% worse", True, expand_list),
+		# build_metric_table_data(loc_name_map, "better_30d", "Where's it getting better over last 30 days?", attr, "month_delta", "% better", False, expand_list),
+		build_metric_table_data(loc_name_map, "worse", "Where's it getting worse over last two weeks?", attr, "two_week_delta", lambda r: "% worse" if r.two_week_delta > 0 else "% better", True, expand_list, filter_zero=True),
+		build_metric_table_data(loc_name_map, "better", "Where's it getting better over last two weeks?", attr, "two_week_delta", lambda r: "% worse" if r.two_week_delta > 0 else "% better", False, expand_list, filter_zero=True),
+		build_metric_table_data(loc_name_map, "highest_peak", "Who had the highest peak?", attr, "peak_value", lambda r: " on %s" % common.format_date(r.peak_date), True, expand_list, filter_zero=True),
+		build_metric_table_data(loc_name_map, "lowest_peak", "Who had the lowest peak?", attr, "peak_value", lambda r: " on %s" % common.format_date(r.peak_date), False, expand_list, filter_zero=True)
 	])
 
 	return _send_response(request, "report_attr.html", {
@@ -66,7 +67,7 @@ def report_attr(request, attr=None, expand_list=None):
 	})
 
 
-def build_metric_table_data(list_token, name, query_attr, model_field_name, suffix_lambda, descending=False, expand_list=None, filter_zero=False):
+def build_metric_table_data(loc_name_map, list_token, name, query_attr, model_field_name, suffix_lambda, descending=False, expand_list=None, filter_zero=False):
 	if expand_list is not None and expand_list != list_token:
 		return None
 
@@ -74,6 +75,7 @@ def build_metric_table_data(list_token, name, query_attr, model_field_name, suff
 	data = [
 		{
 			"loc": r.token,
+			"loc_name": loc_name_map[r.token],
 			"value": abs(getattr(r, model_field_name)),
 			"suffix": suffix_lambda(r)
 		} for r in models.RollupLocationAttrRecentDelta.objects
@@ -185,6 +187,7 @@ def api_v1_fetch(request):
 
 
 def build_chart_data(page_model):
+	loc_name_map = {l.token:l.name for l in models.Location.objects.all()}
 	rolling_average_size = page_model['rolling_average_size']
 	earliest_date = common.parse_date(page_model['earliest_date'])
 	latest_date = common.parse_date(page_model['latest_date'])
@@ -207,8 +210,11 @@ def build_chart_data(page_model):
 					location_names.append(location_group.name)
 					location_tokens += [lgl.location_id for lgl in location_group.locationgrouplocation_set.all()]
 				except:
+					if lt not in loc_name_map:
+						continue
+
 					location_tokens.append(lt)
-					location_names.append(lt)
+					location_names.append(loc_name_map[lt])
 
 			for ln in location_names:
 				if ln not in all_location_names:

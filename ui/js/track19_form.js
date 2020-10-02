@@ -9,6 +9,11 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
         map_attribute_label_value[a.value] = a.label;
     });
 
+    $(".bth_open_chart").each(function (idx,el){
+        let chart_index = $(el).closest(".chart_card").data("chart_index");
+        el.href = build_charts_url([page_model.charts[chart_index]])
+    });
+
     $(".btn_copy_chart").click(function(ev){
         let chart_index = $(ev.target).closest(".chart_card").data("chart_index");
         let chart_to_copy = page_model.charts[chart_index];
@@ -140,9 +145,8 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
 
     }
 
-    function update_page() {
+    function build_charts_url(charts) {
         let qs_parts = [];
-
         if (page_model.rolling_average_size) {
             qs_parts.push("ravg=" + page_model.rolling_average_size);
         }
@@ -155,21 +159,26 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
             qs_parts.push("date_to=" + page_model.latest_date);
         }
 
-        page_model.charts.forEach(function(chart_data, idx){
+
+        charts.forEach(function (chart_data, idx) {
             let suffix = idx === 0 ? "" : "" + idx;
 
-            if (chart_data.name){
+            if (chart_data.name) {
                 qs_parts.push("name" + suffix + "=" + chart_data.name);
             }
-            chart_data.locations.forEach(function(l){
+            chart_data.locations.forEach(function (l) {
                 qs_parts.push("loc" + suffix + "=" + l);
             });
-            chart_data.attributes.forEach(function(a){
+            chart_data.attributes.forEach(function (a) {
                 qs_parts.push("attr" + suffix + "=" + a);
             });
         });
 
-        window.location = "/?" + qs_parts.join("&");
+        return "/?" + qs_parts.join("&");
+    }
+
+    function update_page() {
+        window.location = build_charts_url(page_model.charts);
     }
 }
 

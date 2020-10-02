@@ -69,6 +69,7 @@ class GuidQuery(models.Model):
 @auto_str
 class Location(models.Model):
 	token = models.TextField(primary_key=True)
+	name = models.TextField(null=True)
 	population = models.IntegerField(null=False, default=0)
 
 	@staticmethod
@@ -89,7 +90,7 @@ class Location(models.Model):
 			locations.append({
 				"type": "location",
 				"token": l.token,
-				"name": l.token,
+				"name": l.name,
 				"population": l.population
 			})
 

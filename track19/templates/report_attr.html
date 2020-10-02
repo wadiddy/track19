@@ -22,7 +22,7 @@
                             <tbody>
                                 {% for l in location_list.data %}
                                     <tr>
-                                        <td width=75%><a href="{% url 'index_page' %}?loc={{ l.loc }}&attr={{ attr_token }}{% for a2 in secondary_attrs %}&attr={{ a2 }}{% endfor %}">{{ l.loc }}</a></td>
+                                        <td width=75%><a href="{% url 'index_page' %}?loc={{ l.loc }}&attr={{ attr_token }}{% for a2 in secondary_attrs %}&attr={{ a2 }}{% endfor %}">{{ l.loc_name }}</a></td>
                                         <td nowrap=true>{{ l.value|floatformat:1}}{{ l.suffix }}</td>
                                     </tr>
                                 {% endfor %}
