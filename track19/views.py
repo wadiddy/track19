@@ -28,7 +28,10 @@ def index_page(request):
 
 	chart_data = build_chart_data(page_model)
 
+	description = "; ".join([c['name'] for c in chart_data])
+
 	return _send_response(request, "index.html", {
+		"description": description,
 		"chart_data": chart_data,
 		"chart_data_json": json.dumps(chart_data),
 		"page_model": page_model,
@@ -60,6 +63,7 @@ def report_attr(request, attr=None, expand_list=None):
 	])
 
 	return _send_response(request, "report_attr.html", {
+		"description":  datamodeling_service.QUERYABLE_ATTR_LABELS[attr] + " details",
 		"location_lists": lists,
 		"attr_name": map_attrs[attr],
 		"secondary_attrs": datamodeling_service.QUERYABLE_ATTR_RELATED_ATTRS[attr],
@@ -100,6 +104,8 @@ def _send_response(request, tmpl, ctx=None):
 	if ctx is None:
 		ctx = {}
 
+	qs = request.META['QUERY_STRING']
+	ctx["full_url"] = request.META['PATH_INFO'] + ("?" + qs if qs is not None and len(qs) > 0 else "")
 	ctx["avail_attributes"] = get_attr_labelvalues()
 
 	ctx["last_updated"] = models.LocationDayData.objects.all().order_by("-date")[0].date
@@ -122,6 +128,13 @@ def _send_response(request, tmpl, ctx=None):
 			"label": "Positive Test Rate vs Covid Deaths"
 		},
 	]
+
+	if common.get(ctx, "title") is None:
+		ctx["title"] = "Track 19"
+
+	if common.get(ctx, "description") is None:
+		ctx["description"] = "America's best covid tracker"
+
 
 	r = render(request, tmpl, context=ctx)
 	return r

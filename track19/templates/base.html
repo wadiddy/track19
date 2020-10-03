@@ -11,12 +11,16 @@
     <meta name="author" content="">
 
     <meta property="og:image" content="https://www.track19.today{% static 'track19_fb_preview_big.png' %}" />
-    <meta property="og:image:width" content="758" />
-    <meta property="og:image:height" content="512" />
+    <meta property="og:image:width" content="530" />
+    <meta property="og:image:height" content="276" />
+    <meta property="og:url" content="https://www.track19.today{{ full_url }}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{ title }} - {{ description }}" />
+    <meta property="og:description" content="{{ description }}" />
 
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 
-    <title>Track 19</title>
+    <title>{{ title }} - {{ description }}</title>
 
     <!-- Custom fonts for this template-->
     <link href="{% static 'vendor/fontawesome-free/css/all.css' %}" rel="stylesheet" type="text/css">
