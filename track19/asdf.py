@@ -1,6 +1,7 @@
-from track19 import constants, covid_data_importer
+from track19 import constants, covid_data_importer, datamodeling_service
 
 import django
 django.setup()
 
-covid_data_importer.exec()
+datamodeling_service.init()
+

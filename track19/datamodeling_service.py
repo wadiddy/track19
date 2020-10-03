@@ -2,8 +2,55 @@ from collections import defaultdict
 from datetime import timedelta, datetime
 
 import numpy
+from django.db import transaction
 
 from track19 import common, models, constants
+
+
+DICT_GROUPNAME_LOCATIONTOKENS = {
+	"Northeast Wisconsin": [
+		"wi_county_Oneida",
+		"wi_county_Lincoln",
+		"wi_county_Langlade",
+		"wi_county_Vilas",
+		"wi_county_Price"
+	],
+
+	"Wisconsin Northwoods": [
+		"wi_county_Oneida",
+		"wi_county_Lincoln",
+		"wi_county_Langlade",
+		"wi_county_Vilas",
+		"wi_county_Price"
+	],
+
+	"LA Area": [
+		"CA: Los Angeles County",
+		"CA: Ventura County",
+		"CA: Orange County",
+		"CA: Riverside County",
+		"CA: San Bernardino County",
+	],
+
+	"San Francisco Bay Area": [
+		"CA: Alameda County",
+		"CA: Contra Costa County",
+		"CA: Marin County",
+		"CA: Napa County",
+		"CA: San Francisco County",
+		"CA: San Mateo County",
+		"CA: Santa Clara County",
+		"CA: Solano County",
+		"CA: Sonoma County"
+	],
+
+	"Delta": [
+		"CA: Sacramento County",
+		"CA: Yolo County",
+		"CA: San Joaquin County"
+	]
+}
+
 
 QUERYABLE_ATTR_POSITIVE_RATE = "positive_rate"
 QUERYABLE_ATTR_POSITIVE = "positive"
@@ -328,3 +375,29 @@ class Accumulator():
 	def accumulate(self, v):
 		self.total += v
 		return self.total
+
+
+@transaction.atomic
+def init():
+	print("datamodeing_service init start")
+	for group_name, location_tokens in DICT_GROUPNAME_LOCATIONTOKENS.items():
+		try:
+			lg = models.LocationGroup.objects.get(name__exact=group_name)
+		except models.LocationGroup.DoesNotExist:
+			lg = models.LocationGroup(
+				token="".join(group_name.split(" ")),
+				name=group_name
+			)
+			lg.save()
+
+		models.LocationGroupLocation.objects.filter(location_group=lg).delete()
+		for lt in location_tokens:
+			l = models.Location.objects.get(token=lt)
+			lgl = models.LocationGroupLocation(location_group=lg, location=l)
+			lgl.save()
+	print("datamodeing_service init complete")
+
+
+
+
+
