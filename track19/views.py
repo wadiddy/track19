@@ -150,6 +150,11 @@ def _send_response(request, tmpl, ctx=None):
 
 
 	r = render(request, tmpl, context=ctx)
+	print("sent response!!!")
+	print("sent response!!!")
+	print("sent response!!!")
+	print("sent response!!!")
+	print("sent response!!!")
 	return r
 
 
