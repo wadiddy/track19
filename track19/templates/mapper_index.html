@@ -251,6 +251,18 @@
         $("#btn_pause_animate_opacity").click();
     });
 
+    $("#img_1").change(function(){
+        if (get_current_page_model().animating){
+            $("#inp_opacity").val(0);
+        }
+    });
+
+    $("#img_2").change(function(){
+        if (get_current_page_model().animating){
+            $("#inp_opacity").val(1);
+        }
+    });
+
 
     let opacity_direction_increasing = true;
 
