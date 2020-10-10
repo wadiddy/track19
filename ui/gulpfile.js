@@ -59,6 +59,10 @@ function modules() {
         ]).pipe(gulp.dest(DEST_ROOT + '/vendor/jquery')),
 
         gulp.src(
+            './node_modules/chart.js/dist/*.js'
+        ).pipe(gulp.dest(DEST_ROOT + '/vendor/chart.js')),
+
+        gulp.src(
             './node_modules/underscore/*.js'
         ).pipe(gulp.dest(DEST_ROOT + '/vendor/underscore')),
 
