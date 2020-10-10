@@ -2,104 +2,305 @@
 {% load static %}
 
 {% block content %}
-<div class="col-xl-12 d-flex justify-content-center m-3">
-    <h1 class="mt-5 ">
-        <a target=_blank  href="https://goo.gl/maps/pYRXqR3oQKPXY8as8">Woodcrest Drive</a> - Through Time
-    </h1>
-</div>
-
-<div class="col-xl-6 offset-xl-3 mb-1">
-        <div class="col-xl-12 d-flex justify-content-center">
-            <table>
-                <tr>
-                    <td></td>
-                    <td nowrap=true class="d-flex justify-content-center">
-                        <button title="Animate" class="btn p-1" id="btn_animate_opacity" href="#"><i class="fas fa-play"></i></button>
-                        <button title="zoom in" class="btn p-1" id="btn_zoom_in" href="#"><i class="fas fa-search-plus"></i></button>
-                        <button title="zoom out" class="btn p-1" id="btn_zoom_out" href="#"><i class="fas fa-search-minus"></i></button>
-                        <button title="reset zoom" class="btn p-1" id="btn_reset" href="#"><i class="fas fa-home"></i></button>
-                    </td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>
-                        <select id="img_1" class="w-100">
-                            <option value="{% static 'mapper_woodcrest/wc_1874.jpg' %}">1874 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1920.jpg' %}">1920 (Hand-drawn Map)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1921.jpg' %}">1921 (Map)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1930.jpg' %}">1930 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1938.jpg' %}">1938 (Aerial Photograph)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1939.jpg' %}">1939 (Map)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1948.jpg' %}">1948 (Aerial Photograph)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1957.jpg' %}">1957 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1960.jpg' %}">1960 (Aerial Photograph)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1968.jpg' %}">1968 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1975.jpg' %}">1975 (Advertisement)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1978.jpg' %}">1978 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1979.jpg' %}">1979 (Aerial Photograph)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1982.jpg' %}">1982 (Map)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_2020.jpg' %}" selected>2020 (Aerial Photograph)</option>
-                        </select>
-                    </td>
-
-                    <td>
-                        <input type=range max=1 min=0 step=".01" id="inp_opacity"  class="w-100"/>
-                    </td>
-
-                    <td>
-                        <select id="img_2" class="w-100">
-                            <option value="{% static 'mapper_woodcrest/wc_1874.jpg' %}">1874 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1920.jpg' %}">1920 (Hand-drawn Map)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1921.jpg' %}">1921 (Map)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1930.jpg' %}">1930 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1938.jpg' %}">1938 (Aerial Photograph)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1939.jpg' %}">1939 (Map)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1948.jpg' %}">1948 (Aerial Photograph)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1957.jpg' %}">1957 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1960.jpg' %}">1960 (Aerial Photograph)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1968.jpg' %}">1968 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1975.jpg' %}">1975 (Advertisement)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1978.jpg' %}">1978 (Plat Book)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1979.jpg' %}">1979 (Aerial Photograph)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_1982.jpg' %}" selected>1982 (Map)</option>
-                            <option value="{% static 'mapper_woodcrest/wc_2020.jpg' %}">2020 (Aerial Photograph)</option>
-                        </select>
-                    </td>
-                </tr>
-            </table>
+<div id="modal_layers" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Layers</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-check">
+                    <input class="chk_layer form-check-input" type="checkbox" value="" id="layer_my_house"
+                           data-layerimg="img_layer_my_house">
+                    <label class="form-check-label" for="layer_my_house">
+                        My House
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="chk_layer form-check-input" type="checkbox" value="" id="layer_path_1"
+                           data-layerimg="img_layer_path_1">
+                    <label class="form-check-label" for="layer_path_1">
+                        Path 1
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="chk_layer form-check-input" type="checkbox" value="" id="layer_path_2"
+                           data-layerimg="img_layer_path_2">
+                    <label class="form-check-label" for="layer_path_2">
+                        Path 2
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 
+<div class="col-xl-12  mt-3">
+    <h2 class="d-flex justify-content-center">Woodcrest Drive</h2>
+    <div class="d-flex justify-content-center">
+        <a target=_blank href="https://goo.gl/maps/pYRXqR3oQKPXY8as8">Google Maps</a>
+    </div>
+    <hr>
+</div>
 
-<div class="col-xl-6 offset-xl-3">
-    <div style="width: 100%;" class="d-flex justify-content-center">
-        <div id="div_zoomer" style="height: 500px;">
-            <img id="img_dest_1" src="{% static 'mapper_woodcrest/wc_1982.jpg' %}"
-                 style="position: absolute; top: 0; left: 0px;"/>
-            <img id="img_dest_2" src="{% static 'mapper_woodcrest/wc_1938.jpg' %}"
-                 style="position: absolute; top: 0; left: 0px; opacity: .4"/>
+<div class="col-12 mb-1">
+    <div nowrap=true class="d-flex justify-content-center">
+        <button title="Animate" class="btn p-1" id="btn_animate_opacity" href="#"><i class="fas fa-play"></i></button>
+        <button title="Pause Animation" class="btn p-1" id="btn_pause_animate_opacity" href="#"><i
+                class="fas fa-pause"></i></button>
+        <button title="zoom in" class="btn p-1" id="btn_zoom_in" href="#"><i class="fas fa-search-plus"></i></button>
+        <button title="zoom out" class="btn p-1" id="btn_zoom_out" href="#"><i class="fas fa-search-minus"></i></button>
+        <button title="layers" class="btn p-1" id="btn_layers" href="#"><i class="fas fa-layer-group"></i></button>
+        <a title="reset zoom" class="btn p-1" id="btn_reset" href="/"><i class="fas fa-home"></i></a>
+    </div>
+
+    <div class="row col-12 justify-content-center">
+        <div class="col">
+            <select id="img_1" style="width: 100%">
+                <option value="wc_1874.jpg">1874 (Plat Book)</option>
+                <option value="wc_1920.jpg">1920 (Hand-drawn Map)</option>
+                <option value="wc_1921.jpg">1921 (Map)</option>
+                <option value="wc_1930.jpg">1930 (Plat Book)</option>
+                <option value="wc_1938.jpg" selected>1938 (Aerial Photograph)</option>
+                <option value="wc_1939.jpg">1939 (Map)</option>
+                <option value="wc_1948.jpg">1948 (Aerial Photograph)</option>
+                <option value="wc_1957.jpg">1957 (Plat Book)</option>
+                <option value="wc_1960.jpg">1960 (Aerial Photograph)</option>
+                <option value="wc_1968.jpg">1968 (Plat Book)</option>
+                <option value="wc_1975.jpg">1975 (Advertisement)</option>
+                <option value="wc_1978.jpg">1978 (Plat Book)</option>
+                <option value="wc_1979.jpg">1979 (Aerial Photograph)</option>
+                <option value="wc_1982.jpg">1982 (Map)</option>
+                <option value="wc_2018.jpg">2018 (Aerial Topo Map)</option>
+            </select>
+        </div>
+
+        <div class="col-4">
+            <input type=range max=1 min=0 step=".01" id="inp_opacity" style="width: 100%"/>
+        </div>
+
+        <div class="col">
+            <select id="img_2" style="width: 100%">
+                <option value="wc_1874.jpg">1874 (Plat Book)</option>
+                <option value="wc_1920.jpg">1920 (Hand-drawn Map)</option>
+                <option value="wc_1921.jpg">1921 (Map)</option>
+                <option value="wc_1930.jpg">1930 (Plat Book)</option>
+                <option value="wc_1938.jpg">1938 (Aerial Photograph)</option>
+                <option value="wc_1939.jpg">1939 (Map)</option>
+                <option value="wc_1948.jpg">1948 (Aerial Photograph)</option>
+                <option value="wc_1957.jpg">1957 (Plat Book)</option>
+                <option value="wc_1960.jpg">1960 (Aerial Photograph)</option>
+                <option value="wc_1968.jpg">1968 (Plat Book)</option>
+                <option value="wc_1975.jpg">1975 (Advertisement)</option>
+                <option value="wc_1978.jpg">1978 (Plat Book)</option>
+                <option value="wc_1979.jpg">1979 (Aerial Photograph)</option>
+                <option value="wc_1982.jpg">1982 (Map)</option>
+                <option value="wc_2018.jpg" selected>2018 (Aerial Topo Map)</option>
+            </select>
         </div>
     </div>
 </div>
 
 
-<script>
-    setInterval(function () {
-        $("#img_dest_1")[0].src = $("#img_1").val();
-        $("#img_dest_2")[0].src = $("#img_2").val();
-        $("#img_dest_2").css("opacity", $("#inp_opacity").val());
-    }, 100);
-    $("#inp_opacity").val(.75);
+<div id="div_zoomer_container">
+    <!--    <div style="width: 100%;" class="d-flex justify-content-center">-->
+    <div id="div_zoomer">
+        <img id="img_dest_1" style="position: absolute; top: 0; left: 0px;"/>
+        <img id="img_dest_2" style="position: absolute; top: 0; left: 0px;"/>
 
+        <img id="img_layer_my_house" src="{% static 'mapper_woodcrest/obj_myhouse.gif' %}"
+             style="position: absolute; top: 0; left: 0px;"/>
+        <img id="img_layer_path_1" src="{% static 'mapper_woodcrest/obj_old_trail_1.gif' %}"
+             style="position: absolute; top: 0; left: 0px;"/>
+        <img id="img_layer_path_2" src="{% static 'mapper_woodcrest/obj_old_trail_2.gif' %}"
+             style="position: absolute; top: 0; left: 0px;"/>
+    </div>
+    <!--    </div>-->
+</div>
+
+
+<script>
+    function serialize_page_model(pm) {
+        var str = [];
+        Object.keys(pm).sort().forEach(function (p) {
+            if (pm.hasOwnProperty(p)) {
+                str.push(encodeURIComponent(p) + "=" + encodeURIComponent(pm[p]));
+            }
+        });
+        return "?" + str.join("&");
+    }
+
+    function get_image_dims() {
+        let h = 1054;
+        let w = 1122;
+        return {
+            h: h,
+            w: w,
+            center_y: h / 2,
+            center_x: w / 2,
+        }
+    }
+
+    function get_zoomer_dims() {
+        let h = $(window).height() - $("#div_zoomer_container").offset().top;
+        let w = $(window).width();
+        return {
+            h: h,
+            w: w,
+            center_y: h / 2,
+            center_x: w / 2,
+        }
+    }
+
+
+    const STATIC_DIR = "{% static 'mapper_woodcrest/wc_1874.jpg' %}".split("wc_1874.jpg")[0];
+    const DEFAULT_PAGE_MODEL = {
+        animating: true,
+        opacity: -1,
+        scale: 2,
+        pan_x: 0,
+        pan_y: 0,
+        img_1: "wc_1938.jpg",
+        img_2: "wc_2018.jpg"
+    }
+    const DEFAULT_PAGE_MODEL_STR = serialize_page_model(DEFAULT_PAGE_MODEL);
+
+    function parse_qs() {
+        let s = window.location.search;
+        if (s == null || s.length == 0) {
+            return DEFAULT_PAGE_MODEL;
+        }
+        s = s.indexOf("?") === 0 ? s.substr(1) : s;
+
+        let page_model = Object.assign({}, DEFAULT_PAGE_MODEL);
+        s.split("&").forEach(function (kv) {
+            let k = kv.split("=")[0];
+            let v = kv.split("=")[1];
+            page_model[k] = v;
+        });
+
+        ["scale", "pan_x", "pan_y"].forEach(function (float_field) {
+            let v = parseFloat(page_model[float_field]);
+            if (isNaN(v)) {
+                v = DEFAULT_PAGE_MODEL[float_field];
+            }
+            page_model[float_field] = v;
+        });
+
+        return page_model;
+    }
+
+    const PAGE_MODEL_FROM_REQUEST = parse_qs();
+
+    $("#img_1").val(PAGE_MODEL_FROM_REQUEST.img_1);
+    $("#img_2").val(PAGE_MODEL_FROM_REQUEST.img_2);
+
+    let zoomer_dims = get_zoomer_dims();
+    let image_dims = get_image_dims();
     const panzoom = Panzoom(document.getElementById("div_zoomer"), {
-        startY: -200,
-        startX: -600,
+        startScale: PAGE_MODEL_FROM_REQUEST.scale,
+        startY: (zoomer_dims.center_y - image_dims.center_y) - 80 + PAGE_MODEL_FROM_REQUEST.pan_y,
+        startX: (zoomer_dims.center_x - image_dims.center_x) + 20 + PAGE_MODEL_FROM_REQUEST.pan_x
     });
-    document.getElementById("btn_zoom_in").addEventListener('click', panzoom.zoomIn);
-    document.getElementById("btn_zoom_out").addEventListener('click', panzoom.zoomOut);
-    document.getElementById("btn_reset").addEventListener('click', panzoom.reset);
-    document.getElementById("inp_zoommer").addEventListener('input', (event) => {
-        panzoom.zoom(event.target.valueAsNumber);
+
+    function get_current_page_model() {
+        let pan = panzoom.getPan();
+        let opts = panzoom.getOptions();
+        let animating = $("#btn_pause_animate_opacity").is(":visible");
+        return {
+            animating: animating,
+            scale: panzoom.getScale(),
+            opacity: animating ? -1 : $("#inp_opacity").val(),
+            pan_x: pan.x - opts.startX,
+            pan_y: pan.y - opts.startY,
+            img_1: $("#img_1").val(),
+            img_2: $("#img_2").val()
+        }
+    }
+
+
+    $("#btn_zoom_in").click(panzoom.zoomIn);
+    $("#btn_zoom_out").click(panzoom.zoomOut);
+    $("#btn_reset").click(panzoom.reset);
+    // $("#inp_zoommer").input((event) => {
+    //     panzoom.zoom(event.target.valueAsNumber);
+    // });
+
+
+    $("#btn_layers").click(function () {
+        $("#modal_layers").modal("show");
     });
+
+    $("#btn_pause_animate_opacity").click(function () {
+        $("#btn_pause_animate_opacity").hide();
+        $("#btn_animate_opacity").show();
+    });
+
+    $("#btn_animate_opacity").click(function () {
+        $("#btn_pause_animate_opacity").show();
+        $("#btn_animate_opacity").hide();
+    }).click();
+
+    $("#inp_opacity").on("input", function () {
+        $("#btn_pause_animate_opacity").click();
+    });
+
+
+    let opacity_direction_increasing = true;
+
+    if (PAGE_MODEL_FROM_REQUEST.opacity > 0) {
+        $("#inp_opacity").val(PAGE_MODEL_FROM_REQUEST.opacity);
+    }
+    setInterval(function () {
+        if ($("#btn_pause_animate_opacity").is(":visible")) {
+            let current_opacity_val = parseFloat($("#inp_opacity").val());
+            if (current_opacity_val >= 1) {
+                opacity_direction_increasing = false;
+            } else if (current_opacity_val <= 0) {
+                opacity_direction_increasing = true;
+            }
+
+            if (opacity_direction_increasing) {
+                $("#inp_opacity").val(current_opacity_val + .025);
+            } else {
+                $("#inp_opacity").val(current_opacity_val - .025);
+            }
+        }
+        $("#div_zoomer_container").css("height", get_zoomer_dims().h);
+        $("#img_dest_1")[0].src = STATIC_DIR + $("#img_1").val();
+        $("#img_dest_2")[0].src = STATIC_DIR + $("#img_2").val();
+        $("#img_dest_2").css("opacity", $("#inp_opacity").val());
+
+        $(".chk_layer").each(function (index, el) {
+            let chk_layer = $(el);
+            let img_layer = $("#" + $(el).data("layerimg"));
+            if (chk_layer.is(":checked")) {
+                img_layer.show();
+            } else {
+                img_layer.hide();
+            }
+        });
+
+        let new_search = serialize_page_model(get_current_page_model());
+        if (new_search === DEFAULT_PAGE_MODEL_STR) {
+            new_search = "";
+        }
+
+        if (window.location.search !== new_search) {
+            if (new_search.length == 0) {
+                history.pushState({}, window.document.title, "/");
+            } else {
+                history.pushState({}, window.document.title, new_search);
+            }
+        }
+    }, 100);
 </script>
 {% endblock %}
+
+

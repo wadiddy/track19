@@ -10,14 +10,9 @@ from .common import MyJSONEncoder
 
 
 def index_page(request):
-	print("HERE!!!")
-	print("HERE!!!")
-	print("HERE!!!")
-	print("HERE!!!")
-	print("HERE!!!")
-	print("HERE!!!")
-	print("HERE!!!")
-
+	if 'woodcrestdrive.com' in common.get(request.META, 'HTTP_HOST'):
+		from track19 import views_mapper
+		return views_mapper.mapper_page(request)
 
 	if 'g' not in request.GET:
 		gq = models.GuidQuery.get(request)
@@ -108,10 +103,6 @@ def build_metric_table_data(loc_name_map, list_token, name, query_attr, model_fi
 
 
 def _send_response(request, tmpl, ctx=None):
-	print("sending response!!!")
-	print("sending response!!!")
-	print("sending response!!!")
-
 	if ctx is None:
 		ctx = {}
 
@@ -148,11 +139,7 @@ def _send_response(request, tmpl, ctx=None):
 
 
 	r = render(request, tmpl, context=ctx)
-	print("sent response!!!")
-	print("sent response!!!")
-	print("sent response!!!")
-	print("sent response!!!")
-	print("sent response!!!")
+
 	return r
 
 

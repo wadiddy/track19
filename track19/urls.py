@@ -1,19 +1,9 @@
-from django.urls import path
-
 from django.contrib import admin
+from django.urls import path
 
 admin.autodiscover()
 
 import track19.views
-import track19.views_mapper
-
-# To add a new path, first import the app:
-# import blog
-#
-# Then add the new path:
-# path('blog/', blog.urls, name="blog")
-#
-# Learn more here: https://docs.djangoproject.com/en/2.1/topics/http/urls/
 
 urlpatterns = [
     path("", track19.views.index_page, name="index_page"),
@@ -24,6 +14,4 @@ urlpatterns = [
     path("api/v1/fetch", track19.views.api_v1_fetch, name="api_v1_fetch"),
     path("api/v1/locations", track19.views.api_v1_locations, name="api_v1_locations"),
     path("api/v1/attributes", track19.views.api_v1_attributes, name="api_v1_attributes"),
-
-    path("mapper", track19.views_mapper.mapper_page, name="mapper_page"),
 ]
