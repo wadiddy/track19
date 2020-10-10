@@ -5,7 +5,7 @@ from django.contrib import admin
 admin.autodiscover()
 
 import track19.views
-# import track19.views_mapper
+import track19.views_mapper
 
 # To add a new path, first import the app:
 # import blog
@@ -25,5 +25,5 @@ urlpatterns = [
     path("api/v1/locations", track19.views.api_v1_locations, name="api_v1_locations"),
     path("api/v1/attributes", track19.views.api_v1_attributes, name="api_v1_attributes"),
 
-    # path("mapper", track19.views_mapper.mapper_page, name="mapper_page"),
+    path("mapper", track19.views_mapper.mapper_page, name="mapper_page"),
 ]
