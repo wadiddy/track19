@@ -12,6 +12,15 @@ from .common import MyJSONEncoder
 
 
 def index_page(request):
+	print("HERE!!!")
+	print("HERE!!!")
+	print("HERE!!!")
+	print("HERE!!!")
+	print("HERE!!!")
+	print("HERE!!!")
+	print("HERE!!!")
+
+
 	if 'g' not in request.GET:
 		gq = models.GuidQuery.get(request)
 		if gq is not None:
@@ -101,6 +110,10 @@ def build_metric_table_data(loc_name_map, list_token, name, query_attr, model_fi
 
 
 def _send_response(request, tmpl, ctx=None):
+	print("sending response!!!")
+	print("sending response!!!")
+	print("sending response!!!")
+
 	if ctx is None:
 		ctx = {}
 
