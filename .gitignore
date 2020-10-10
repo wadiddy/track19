@@ -9,3 +9,4 @@ getting-started/*
 /.idea/
 /ui/node_modules/
 /track19/local_settings.py
+/wi.pxd/
