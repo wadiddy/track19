@@ -296,8 +296,7 @@ def get_normalized_data(
 			else:
 				raise Exception("Invalid MULTIPLE_LOCATION_HANDLING " + multiple_location_handling)
 
-			normalized_value = float(scalar) * float(total_value) / (
-				float(total_population) if normalize_by_population else 1)
+			normalized_value = float(scalar) * float(total_value) / (float(total_population) if normalize_by_population else 1)
 			map_date_normalized_value[d] = normalized_value
 
 	dict_date_rolling_values = defaultdict(list)
