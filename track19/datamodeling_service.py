@@ -6,16 +6,7 @@ from django.db import transaction
 
 from track19 import common, models, constants
 
-
 DICT_GROUPNAME_LOCATIONTOKENS = {
-	"Northeast Wisconsin": [
-		"wi_county_Oneida",
-		"wi_county_Lincoln",
-		"wi_county_Langlade",
-		"wi_county_Vilas",
-		"wi_county_Price"
-	],
-
 	"Wisconsin Northwoods": [
 		"wi_county_Oneida",
 		"wi_county_Lincoln",
@@ -51,7 +42,6 @@ DICT_GROUPNAME_LOCATIONTOKENS = {
 	]
 }
 
-
 QUERYABLE_ATTR_POSITIVE_RATE = "positive_rate"
 QUERYABLE_ATTR_POSITIVE = "positive"
 QUERYABLE_ATTR_TOTAL_TESTS = "total_tests"
@@ -61,6 +51,9 @@ QUERYABLE_ATTR_IN_HOSPITAL = "in_hospital"
 QUERYABLE_ATTR_IN_ICU = "in_icu"
 QUERYABLE_ATTR_OTHER_DEATHS = "other_deaths"
 QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE = "percent_of_population_who_have_had_covid"
+QUERYABLE_ATTR_COVID_DEATHS_PER_POSITIVE = "deaths_by_positive_cases"
+QUERYABLE_ATTR_COVID_DEATHS_PER_HOSPITALIZED = "deaths_by_hospitalized_cases"
+QUERYABLE_ATTR_COVID_HOSPITALIZED_PER_POSITIVE = "hospitalizations_by_positive_cases"
 
 QUERYABLE_ATTR_OTHER_DEATH_prefix = "other_death_"
 QUERYABLE_ATTR_OTHER_DEATH_ANY = QUERYABLE_ATTR_OTHER_DEATH_prefix + "_any"
@@ -81,6 +74,10 @@ QUERYABLE_ATTRS = [
 	QUERYABLE_ATTR_IN_ICU,
 	QUERYABLE_ATTR_OTHER_DEATHS,
 	QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE,
+
+	QUERYABLE_ATTR_COVID_DEATHS_PER_POSITIVE,
+	QUERYABLE_ATTR_COVID_DEATHS_PER_HOSPITALIZED,
+	QUERYABLE_ATTR_COVID_HOSPITALIZED_PER_POSITIVE
 ]
 
 QUERYABLE_ATTR_LABELS = {
@@ -89,6 +86,9 @@ QUERYABLE_ATTR_LABELS = {
 	QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE: "Percent of population who've had Covid-19",
 	QUERYABLE_ATTR_TOTAL_TESTS: "Tests Performed per 100k residents",
 	QUERYABLE_ATTR_COVID_DEATHS: "Covid Deaths per million residents",
+	QUERYABLE_ATTR_COVID_DEATHS_PER_POSITIVE: "Covid Deaths per 100 Positive Cases",
+	QUERYABLE_ATTR_COVID_DEATHS_PER_HOSPITALIZED: "Covid Deaths per 100 Hospitalized Cases",
+	QUERYABLE_ATTR_COVID_HOSPITALIZED_PER_POSITIVE: "Covid Hospitalizations per million Positive Cases",
 	QUERYABLE_ATTR_OTHER_DEATHS: "Other Causes of Death per million residents",
 	QUERYABLE_ATTR_ON_VENTILATOR: "People ventilated per 100k residents",
 	QUERYABLE_ATTR_IN_HOSPITAL: "People hospitalized per 100k residents",
@@ -105,9 +105,11 @@ QUERYABLE_ATTR_RELATED_ATTRS = {
 	QUERYABLE_ATTR_ON_VENTILATOR: [QUERYABLE_ATTR_COVID_DEATHS],
 	QUERYABLE_ATTR_IN_HOSPITAL: [QUERYABLE_ATTR_COVID_DEATHS],
 	QUERYABLE_ATTR_IN_ICU: [QUERYABLE_ATTR_COVID_DEATHS],
+
+	QUERYABLE_ATTR_COVID_DEATHS_PER_POSITIVE: [QUERYABLE_ATTR_COVID_HOSPITALIZED_PER_POSITIVE, QUERYABLE_ATTR_COVID_DEATHS_PER_HOSPITALIZED],
+	QUERYABLE_ATTR_COVID_DEATHS_PER_HOSPITALIZED: [QUERYABLE_ATTR_COVID_HOSPITALIZED_PER_POSITIVE, QUERYABLE_ATTR_COVID_DEATHS_PER_POSITIVE],
+	QUERYABLE_ATTR_COVID_HOSPITALIZED_PER_POSITIVE: [QUERYABLE_ATTR_COVID_DEATHS_PER_POSITIVE, QUERYABLE_ATTR_COVID_DEATHS_PER_HOSPITALIZED]
 }
-
-
 
 MULTIPLE_LOCATION_HANDLING_SUM = "sum"
 MULTIPLE_LOCATION_HANDLING_AVG = "avg"
@@ -176,6 +178,21 @@ def build_attr_data(
 			CAUSEOFDEATH_USYEARLYDEATHS[attr]) / (365.0 * float(constants.USA_POPULATION))
 		normalize_by_population = False
 		multiple_location_handling = MULTIPLE_LOCATION_HANDLING_AVG
+	elif attr == QUERYABLE_ATTR_COVID_HOSPITALIZED_PER_POSITIVE:
+		scalar = 100
+		normalize_by_population = False
+		multiple_location_handling = MULTIPLE_LOCATION_HANDLING_AVG
+		function_get_value = lambda ldd: (min(1, float(ldd.in_hospital) / float(ldd.positive)) if ldd.positive > 0 else 0)
+	elif attr == QUERYABLE_ATTR_COVID_DEATHS_PER_POSITIVE:
+		scalar = 100
+		normalize_by_population = False
+		multiple_location_handling = MULTIPLE_LOCATION_HANDLING_AVG
+		function_get_value = lambda ldd: (min(1, float(ldd.deaths) / float(ldd.positive)) if ldd.positive > 0 else 0)
+	elif attr == QUERYABLE_ATTR_COVID_DEATHS_PER_HOSPITALIZED:
+		scalar = 100
+		normalize_by_population = False
+		multiple_location_handling = MULTIPLE_LOCATION_HANDLING_AVG
+		function_get_value = lambda ldd: (min(1, float(ldd.deaths) / float(ldd.in_hospital)) if ldd.in_hospital > 0 else 0)
 	elif attr == QUERYABLE_ATTR_PERCENT_OF_POPULATION_POSITIVE:
 		scalar = 100
 		normalize_by_population = True
@@ -246,7 +263,8 @@ def get_normalized_data(
 	for location in locations:
 		total_population += location.population
 
-		ldds_map = {common.get_date_key(ldd.date): ldd for ldd in location.locationdaydata_set.filter(date__gte=earliest_date, date__lte=latest_date)}
+		ldds_map = {common.get_date_key(ldd.date): ldd for ldd in
+		            location.locationdaydata_set.filter(date__gte=earliest_date, date__lte=latest_date)}
 
 		for date_key in common.get_datekeys_between(earliest_date, latest_date):
 			ldd = common.get(ldds_map, date_key)
@@ -255,6 +273,7 @@ def get_normalized_data(
 			else:
 				try:
 					v = function_get_value(ldd)
+					print(date_key, ldd.in_hospital, ldd.positive, v)
 				except:
 					v = None
 
@@ -277,7 +296,8 @@ def get_normalized_data(
 			else:
 				raise Exception("Invalid MULTIPLE_LOCATION_HANDLING " + multiple_location_handling)
 
-			normalized_value = float(scalar) * float(total_value) / (float(total_population) if normalize_by_population else 1)
+			normalized_value = float(scalar) * float(total_value) / (
+				float(total_population) if normalize_by_population else 1)
 			map_date_normalized_value[d] = normalized_value
 
 	dict_date_rolling_values = defaultdict(list)
@@ -396,8 +416,3 @@ def init():
 			lgl = models.LocationGroupLocation(location_group=lg, location=l)
 			lgl.save()
 	print("datamodeing_service init complete")
-
-
-
-
-
