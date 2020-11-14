@@ -86,7 +86,9 @@ map_county_population = {
 
 class WisconsinConnector(BaseConnector):
 	def get_json_url(self):
-		return "https://opendata.arcgis.com/datasets/b913e9591eae4912b33dc5b4e88646c5_10.geojson?where=GEO%20%3D%20%27County%27"
+		# return "https://opendata.arcgis.com/datasets/9d0cb9329d5745cfbf6ce91fa9835c6e_1.geojson"
+		return "https://opendata.arcgis.com/datasets/5374188992374b318d3e2305216ee413_12.geojson"
+		# return "https://opendata.arcgis.com/datasets/b913e9591eae4912b33dc5b4e88646c5_10.geojson?where=GEO%20%3D%20%27County%27"
 
 	def _import_json(self, json_url):
 		location_map = {l.pk: l for l in models.Location.objects.all()}
@@ -135,7 +137,7 @@ class WisconsinConnector(BaseConnector):
 			ldd.in_hospital = hosp_yes- prev_in_hospital
 			map_location_previous_hosp[location] = hosp_yes
 
-			ic_yes = common.default(get_safe_number(prop_bucket['IC_YES']), 0)
+			ic_yes = 0 #common.default(get_safe_number(prop_bucket['IC_YES']), 0)
 			prev_in_icu = map_location_previous_icu[location] if location in map_location_previous_icu else 0
 			ldd.in_icu = ic_yes- prev_in_icu
 			map_location_previous_icu[location] = ic_yes

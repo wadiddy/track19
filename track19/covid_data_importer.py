@@ -5,14 +5,19 @@ from track19.connectors.us_states_connector import UsaConnector
 from track19.connectors.wisconsin_connector import WisconsinConnector
 
 CONNECTORS = [
-    UsaConnector,
-    WisconsinConnector,
-    CaCasesConnector,
-    CaHospitalsConnector
+	UsaConnector,
+	WisconsinConnector,
+	CaCasesConnector,
+	CaHospitalsConnector
 ]
 
 
 def exec():
-    datamodeling_service.init()
-    for c in CONNECTORS:
-        c().import_data()
+	datamodeling_service.init()
+	for c in CONNECTORS:
+		try:
+			c().import_data()
+		except Exception as e:
+			raise e
+			print(c().get_json_url())
+			print(e)
