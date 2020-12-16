@@ -7,6 +7,18 @@ from django.db import transaction
 from track19 import common, models, constants
 
 DICT_GROUPNAME_LOCATIONTOKENS = {
+	"Outdoor Dining Allowed (Bay Area)": [
+		"CA: San Mateo County",
+	],
+
+	"Outdoor Dining Not Allowed (Bay Area)": [
+		"CA: Alameda County",
+		"CA: Contra Costa County",
+		"CA: Marin County",
+		"CA: San Francisco County",
+		"CA: Santa Clara County",
+	],
+
 	"Wisconsin Northwoods": [
 		"wi_county_Oneida",
 		"wi_county_Lincoln",
