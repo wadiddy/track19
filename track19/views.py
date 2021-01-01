@@ -1,4 +1,5 @@
 import json
+import pprint
 
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -25,7 +26,17 @@ def index_page(request):
 		page_model = build_page_model(request, default_chart={
 			"name": None,
 			"locations": ["USA"],
-			"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
+			"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE],
+			"markers": [
+				{
+					"date": common.get_date_key(common.parse_date("2020-11-26")),
+					"text": "Thanksgiving"
+				},
+				{
+					"date": common.get_date_key(common.parse_date("2020-12-25")),
+					"text": "Christmas"
+				}
+			]
 		})
 
 	chart_data = build_chart_data(page_model)
@@ -167,14 +178,23 @@ def build_page_model(request, default_chart=None):
 		for i in range(10):
 			suffix = "" if i == 0 else str(i)
 			locations = [l for l in common.get(request_dict, "loc" + suffix, []) if l in all_location_tokens]
-			attributes = [a for a in common.get(request_dict, "attr" + suffix, []) if
-			              a in datamodeling_service.QUERYABLE_ATTRS]
+			attributes = [a for a in common.get(request_dict, "attr" + suffix, []) if a in datamodeling_service.QUERYABLE_ATTRS]
+
+			markers = []
+			for md in common.get(request_dict, "md" + suffix, []):
+				if "~" in md:
+					md_parts = md.split("~")
+					markers.append({
+						"date": md_parts[0],
+						"text": "~".join(md_parts[1:]),
+					})
 
 			if len(locations) > 0 and len(attributes) > 0:
 				page_model['charts'].append({
 					"name": common.get_first(request_dict, "name" + suffix),
 					"locations": locations,
 					"attributes": attributes,
+					"markers": markers
 				})
 
 		if len(page_model['charts']) == 0 and default_chart is not None:
@@ -212,6 +232,7 @@ def build_chart_data(page_model):
 	for chart_meta in page_model['charts']:
 		all_location_names = []
 		chart_data = {
+			"markers": chart_meta["markers"],
 			"series_list": []
 		}
 		series_list = chart_data["series_list"]

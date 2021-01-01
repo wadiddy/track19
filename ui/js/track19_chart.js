@@ -1,13 +1,56 @@
-const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000'];
+const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000'];
 
 function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
+    const verticalLinePlugin = {
+        getLinePosition: function (chart, index) {
+            const meta = chart.getDatasetMeta(0); // first dataset is used to discover X coordinate of a point
+            const data = meta.data;
+            return data[index]._model.x;
+        },
+        renderVerticalLine: function (chartInstance, marker, marker_idx) {
+            const lineIndex = chartInstance.scales["x-axis-0"].ticks.indexOf(marker.date);
+            const lineLeftOffset = this.getLinePosition(chartInstance, lineIndex);
+            let scale_key = null;
+            for (s in chartInstance.scales){
+                if (s.indexOf("x-axis") != 0){
+                    scale_key = s;
+                }
+            }
+            const scale = chartInstance.scales[scale_key];
+            const context = chartInstance.chart.ctx;
+            const color = "#000000"; COLORS[COLORS.length - (marker_idx + 1)];
+            const line_top = scale.top - (-40 + (1 + marker_idx) * 10);
+
+            // render vertical line
+            context.beginPath();
+            context.strokeStyle = color;
+            context.moveTo(lineLeftOffset, line_top);
+            context.lineTo(lineLeftOffset, scale.bottom);
+            context.stroke();
+
+            // write label
+            context.fillStyle = color;
+            context.textAlign = 'center';
+            context.fillText(marker.text, lineLeftOffset, line_top - 10);
+        },
+
+        afterDatasetsDraw: function (chart, easing) {
+            if (chart.config.markers) {
+                chart.config.markers.forEach(function (marker, idx) {
+                    this.renderVerticalLine(chart, marker, idx);
+                }.bind(this));
+            }
+        }
+    };
+    Chart.plugins.register(verticalLinePlugin);
+
+
     const map_attribute_label_value = {}
     avail_attributes.forEach(function (a) {
         map_attribute_label_value[a.value] = a.label;
     });
 
     const show_tooltips = !$("#id_mobile_checker").is(":visible");
-    console.log("show_tooltips", show_tooltips);
 
     // Set new default font family and font color to mimic Bootstrap's default styling
     Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
@@ -102,6 +145,7 @@ function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
 
         var myLineChart = new Chart(canvas, {
             type: 'line',
+            markers: chart_data.markers,
             data: {
                 labels: labels,
                 datasets: datasets,

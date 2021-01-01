@@ -196,7 +196,7 @@
 </a>
 
 <div class="modal fade" id="chart_configuration_modal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title"></h5>
@@ -232,6 +232,20 @@
                         </div>
                     </div>
 
+                    <hr class="sidebar-divider">
+
+                    <div class="text-gray-900">Markers (optional):</div>
+                    <table id="div_modal_markers_container">
+                        <thead>
+                        <tr>
+                            <th class="text-gray-700" style="font-weight: normal">Date</th>
+                            <th class="text-gray-700" style="font-weight: normal">Label</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
                 </form>
             </div>
 
@@ -327,5 +341,19 @@
 
     gtag('config', 'UA-174492326-1');
 </script>
+
+<table style="display: none"  id="tbl_template_marker">
+    <tr>
+        <td>
+            <input type=date name="marker_date"  class="marker_input my-2 small form-control bg-light border-0 small" />
+        </td>
+        <td>
+            <input type=text name="marker_text"  class="marker_input my-2 small form-control bg-light border-0 small" />
+        </td>
+        <td>
+            <a href="#" class="a_delete_marker" title="Delete Marker">x</a>
+        </td>
+    </tr>
+</table>
 
 </html>

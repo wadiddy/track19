@@ -285,7 +285,6 @@ def get_normalized_data(
 			else:
 				try:
 					v = function_get_value(ldd)
-					print(date_key, ldd.in_hospital, ldd.positive, v)
 				except:
 					v = None
 
