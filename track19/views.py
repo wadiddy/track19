@@ -79,7 +79,7 @@ def report_attr(request, attr=None, expand_list=None):
 		"description":  datamodeling_service.QUERYABLE_ATTR_LABELS[attr] + " details",
 		"location_lists": lists,
 		"attr_name": map_attrs[attr],
-		"secondary_attrs": datamodeling_service.QUERYABLE_ATTR_RELATED_ATTRS[attr],
+		"secondary_attrs": [],
 		"attr_token": attr
 	})
 
