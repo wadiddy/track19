@@ -1,6 +1,6 @@
 const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000'];
 
-function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
+function covid_tracker_chart(page_model, charts_container, chart_datas, avail_attributes) {
     const verticalLinePlugin = {
         getLinePosition: function (chart, index) {
             const meta = chart.getDatasetMeta(0); // first dataset is used to discover X coordinate of a point
@@ -9,6 +9,10 @@ function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
         },
         renderVerticalLine: function (chartInstance, marker, marker_idx) {
             const lineIndex = chartInstance.scales["x-axis-0"].ticks.indexOf(marker.date);
+            if (lineIndex < 0){
+                return;
+            }
+
             const lineLeftOffset = this.getLinePosition(chartInstance, lineIndex);
             let scale_key = null;
             for (s in chartInstance.scales){
@@ -145,7 +149,7 @@ function covid_tracker_chart(charts_container, chart_datas, avail_attributes) {
 
         var myLineChart = new Chart(canvas, {
             type: 'line',
-            markers: chart_data.markers,
+            markers: page_model.markers,
             data: {
                 labels: labels,
                 datasets: datasets,

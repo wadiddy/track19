@@ -231,21 +231,6 @@
                             {% endfor %}
                         </div>
                     </div>
-
-                    <hr class="sidebar-divider">
-
-                    <div class="text-gray-900">Markers (optional):</div>
-                    <table id="div_modal_markers_container">
-                        <thead>
-                        <tr>
-                            <th class="text-gray-700" style="font-weight: normal">Date</th>
-                            <th class="text-gray-700" style="font-weight: normal">Label</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
                 </form>
             </div>
 
@@ -259,7 +244,7 @@
 
 
 <div class="modal fade" id="global_configuration_modal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Settings</h5>
@@ -270,17 +255,27 @@
 
             <div class="modal-body">
                 <form>
-                    <div class="mb-3">
-                        <label class="control-label">Earliest Date</label>
-                        <input class="form-control" name="earliest_date" id="inp_earliest_date"
-                               placeholder="Earliest Date" type="date"
-                               value="{{ page_model.earliest_date|default_if_none:"" }}"/>
-                    </div>
+                    <div class="mb-3 row">
+                        <div class="col-sm">
+                            <label class="control-label">Earliest Date</label>
+                            <input class="form-control"
+                                   name="earliest_date"
+                                   id="inp_earliest_date"
+                                   placeholder="Earliest Date" type="date"
+                                   value="{{ page_model.earliest_date|default_if_none:"" }}"
+                            />
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="control-label">Latest Date</label>
-                        <input class="form-control" name="latest_date" id="inp_latest_date" placeholder="Earliest Date"
-                               type="date" value="{{ page_model.latest_date|default_if_none:"" }}"/>
+                        <div class="col-sm">
+                            <label class="control-label">Latest Date</label>
+                            <input class="form-control"
+                                   name="latest_date"
+                                   id="inp_latest_date"
+                                   placeholder="Earliest Date"
+                                   type="date"
+                                   value="{{ page_model.latest_date|default_if_none:"" }}"
+                            />
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -299,6 +294,32 @@
                             </option>
                         </select>
                     </div>
+
+                    <div class="mb-3 row">
+                        <div class="col-sm">
+                            <label class="control-label">Markers (optional)</label>
+                        </div>
+                        <div class="col-sm">
+                            <select class="form-control" id="cbo_canned_markers">
+                                <option value="">Standard Markers</option>
+                                {% for m in canned_markers|dictsort:"date" %}
+                                <option value="{{m.date}}~{{ m.text }}">{{ m.text }} ({{ m.date }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <table id="div_modal_markers_container">
+                        <thead>
+                        <tr>
+                            <th class="text-gray-700" style="font-weight: normal">Date</th>
+                            <th class="text-gray-700" style="font-weight: normal">Label</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
                 </form>
             </div>
 
@@ -323,7 +344,11 @@
 
 {% if page_model_json %}
     <script>
-        covid_tracker_form( {{ page_model_json | safe }}, {{ avail_locations | safe }}, {{ avail_attributes | safe }},);
+        covid_tracker_form(
+            {{ page_model_json | safe }},
+            {{ avail_locations | safe }},
+            {{ avail_attributes | safe }}
+        );
     </script>
 {% endif %}
 

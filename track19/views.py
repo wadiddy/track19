@@ -9,6 +9,81 @@ from django.views.decorators.cache import cache_page
 from . import models, datamodeling_service, common
 from .common import MyJSONEncoder
 
+CANNED_MARKERS = [
+	{
+		"date": common.get_date_key(common.parse_date("2020-12-14")),
+		"text": "Vaccine First Available"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-12-04")),
+		"text": "Bay Area begins shelter in place"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-11-07")),
+		"text": "Biden declared winner"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-09-07")),
+		"text": "Bay Area Heatwave / Poor air quality"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-07-12")),
+		"text": "CA shuts down all bars and indoor dining"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-06-28")),
+		"text": "Bay Area halts reopening"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-03-19")),
+		"text": "First California shutdown begins - shelter in place"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-04-25")),
+		"text": "States begin to re-open"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-05-03")),
+		"text": "Beaches shut down in Souther California"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-05-29")),
+		"text": "San Francisco mandates masks while outside the home"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-06-18")),
+		"text": "CA mandates masks while outside the home"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-06-01")),
+		"text": "George Floyd Protests"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-12-16")),
+		"text": "San Mateo County shuts outdoor dining"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-05-25")),
+		"text": "Memorial Day Weekend"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-07-04")),
+		"text": "Independence Day"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-09-07")),
+		"text": "Labor Day"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-11-26")),
+		"text": "Thanksgiving"
+	},
+	{
+		"date": common.get_date_key(common.parse_date("2020-12-25")),
+		"text": "Christmas"
+	}
+]
+
 
 def index_page(request):
 	if 'woodcrestdrive.com' in common.get(request.META, 'HTTP_HOST'):
@@ -26,17 +101,7 @@ def index_page(request):
 		page_model = build_page_model(request, default_chart={
 			"name": None,
 			"locations": ["USA"],
-			"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE],
-			"markers": [
-				{
-					"date": common.get_date_key(common.parse_date("2020-11-26")),
-					"text": "Thanksgiving"
-				},
-				{
-					"date": common.get_date_key(common.parse_date("2020-12-25")),
-					"text": "Christmas"
-				}
-			]
+			"attributes": [datamodeling_service.QUERYABLE_ATTR_POSITIVE_RATE]
 		})
 
 	chart_data = build_chart_data(page_model)
@@ -148,6 +213,7 @@ def _send_response(request, tmpl, ctx=None):
 	if common.get(ctx, "description") is None:
 		ctx["description"] = "America's best covid tracker"
 
+	ctx["canned_markers"] = CANNED_MARKERS
 
 	r = render(request, tmpl, context=ctx)
 
@@ -164,12 +230,26 @@ def build_page_model(request, default_chart=None):
 	from track19 import datamodeling_service
 	request_dict, guid_query = models.GuidQuery.get_query_dict(request)
 
+	marker_map = {}
+	for md in common.get(request_dict, "md", []):
+		if "~" in md:
+			md_parts = md.split("~")
+			marker_map[md_parts[0]] = "~".join(md_parts[1:])
+
+	markers = []
+	for marker_date in sorted(marker_map):
+		markers.append({
+			"date": marker_date,
+			"text": marker_map[marker_date],
+		})
+
 	page_model = {
 		"api_url": reverse(api_v1_fetch) + ("?" + guid_query.query if guid_query is not None else ""),
 		"guid": common.get(request_dict, 'guid'),
 		"rolling_average_size": common.get_int(request_dict, 'ravg', '14'),
 		"earliest_date": common.get_date_key(common.get_date(request_dict, 'date_from', '2020-05-01')),
 		"latest_date": common.get_date_key(common.get_date(request_dict, 'date_to')),
+		"markers": markers,
 		"charts": []
 	}
 
@@ -180,25 +260,26 @@ def build_page_model(request, default_chart=None):
 			locations = [l for l in common.get(request_dict, "loc" + suffix, []) if l in all_location_tokens]
 			attributes = [a for a in common.get(request_dict, "attr" + suffix, []) if a in datamodeling_service.QUERYABLE_ATTRS]
 
-			markers = []
-			for md in common.get(request_dict, "md" + suffix, []):
-				if "~" in md:
-					md_parts = md.split("~")
-					markers.append({
-						"date": md_parts[0],
-						"text": "~".join(md_parts[1:]),
-					})
 
 			if len(locations) > 0 and len(attributes) > 0:
 				page_model['charts'].append({
 					"name": common.get_first(request_dict, "name" + suffix),
 					"locations": locations,
-					"attributes": attributes,
-					"markers": markers
+					"attributes": attributes
 				})
 
 		if len(page_model['charts']) == 0 and default_chart is not None:
 			page_model['charts'].append(default_chart)
+			page_model["markers"] = [
+				{
+					"date": common.get_date_key(common.parse_date("2020-11-26")),
+					"text": "Thanksgiving"
+				},
+				{
+					"date": common.get_date_key(common.parse_date("2020-12-25")),
+					"text": "Christmas"
+				}
+			]
 
 	return page_model
 
@@ -227,12 +308,12 @@ def build_chart_data(page_model):
 	rolling_average_size = page_model['rolling_average_size']
 	earliest_date = common.parse_date(page_model['earliest_date'])
 	latest_date = common.parse_date(page_model['latest_date'])
+	markers = page_model['markers']
 
 	chart_list = []
 	for chart_meta in page_model['charts']:
 		all_location_names = []
 		chart_data = {
-			"markers": chart_meta["markers"],
 			"series_list": []
 		}
 		series_list = chart_data["series_list"]

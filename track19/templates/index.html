@@ -37,6 +37,7 @@
     <script>
         $(document).ready(function () {
             covid_tracker_chart(
+                {{ page_model_json | safe }},
                 $("#charts_container"),
                 {{  chart_data_json|safe }},
                 {{ avail_attributes|safe }}

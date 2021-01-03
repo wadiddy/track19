@@ -1,4 +1,6 @@
 function covid_tracker_form(page_model, avail_locations, avail_attributes) {
+    console.log("page_model", page_model);
+
     const map_location_token_name = {}
     avail_locations.forEach(function (l) {
         map_location_token_name[l.token] = l.name;
@@ -20,8 +22,7 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
         page_model.charts.splice(chart_index, 0, {
             "name": chart_to_copy.name,
             "locations": chart_to_copy.locations.map(function(l){return l;}),
-            "attributes": chart_to_copy.attributes.map(function(a){return a;}),
-            "markers": chart_to_copy.markers.map(function(m){return m;}),
+            "attributes": chart_to_copy.attributes.map(function(a){return a;})
         });
         update_page();
         return false;
@@ -35,6 +36,58 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
     });
 
     $('#global_configuration_modal')
+        .on('show.bs.modal', function (ev) {
+            let markers_container = $("#div_modal_markers_container tbody");
+            markers_container.empty();
+
+            $("#div_canned_markers").hide();
+
+            page_model.markers.forEach(function(m){
+                let r = $("#tbl_template_marker tr").clone();
+                r.css("display", null);
+                $("input[name=marker_date]", r).val(m.date);
+                $("input[name=marker_text]", r).val(m.text);
+                markers_container.append(r);
+            });
+
+            window.clearInterval(window.INTERVAL_MARKER_HANDLER);
+            window.INTERVAL_MARKER_HANDLER = window.setInterval(function(){
+                let empty_dates = $("#div_modal_markers_container input[name=marker_date]").filter(function(idx, d){
+                    return $(d).val().length === 0;
+                });
+                if (empty_dates.length === 0){
+                    markers_container.append($("#tbl_template_marker tr").clone().css("display", null));
+                }
+            }, 100);
+        })
+        .on('change', '#cbo_canned_markers', function(ev){
+            let markers_container = $("#div_modal_markers_container tbody");
+            let canned_marker = $("#cbo_canned_markers").val();
+            if (canned_marker.length == 0){
+                return;
+            }
+
+            let r = $("#tbl_template_marker tr").clone();
+            r.css("display", null);
+            $("input[name=marker_date]", r).val(canned_marker.split("~")[0]);
+            $("input[name=marker_text]", r).val(canned_marker.split("~")[1]);
+            markers_container.prepend(r);
+            $("#cbo_canned_markers").val("");
+            update_markers();
+        })
+        .on('click', '#a_show_canned_markers', function(ev){
+            $("#a_show_canned_markers").hide();
+            $("#div_canned_markers").show();
+        })
+        .on('click', '.a_delete_marker', function(ev){
+            $(ev.target).closest("tr").remove();
+            update_markers();
+            return false;
+        })
+        .on('change', '.marker_input', function(ev){
+            update_markers();
+            return false;
+        })
         .on('click', '.btn-primary', function(ev){
             page_model.rolling_average_size = $('#global_configuration_modal #inp_rolling_average_size').val();
             page_model.earliest_date = $('#global_configuration_modal #inp_earliest_date').val();
@@ -45,10 +98,9 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
     ;
 
     function update_markers() {
-        let chart_data = $('#chart_configuration_modal').data("chart_data");
-        let marker_dates = $('#chart_configuration_modal input[name=marker_date]');
-        let marker_texts = $('#chart_configuration_modal input[name=marker_text]');
-        chart_data.markers = [];
+        let marker_dates = $('#div_modal_markers_container input[name=marker_date]');
+        let marker_texts = $('#div_modal_markers_container input[name=marker_text]');
+        page_model.markers = [];
         marker_dates.each(function (idx, el) {
             let marker_date = $(el).val();
             if (marker_date.length > 0) {
@@ -56,7 +108,7 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
                 if (marker_text.length == 0) {
                     marker_text = " ";
                 }
-                chart_data.markers.push({
+                page_model.markers.push({
                     "date": marker_date,
                     "text": marker_text
                 });
@@ -78,8 +130,7 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
                 chart_data = {
                     "name": null,
                     "locations": [],
-                    "attributes": [],
-                    "markers": [],
+                    "attributes": []
                 }
                 page_model.charts.unshift(chart_data);
             }
@@ -90,15 +141,6 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
         })
         .on('click', '.btn-primary', function(ev){
             update_page();
-            return false;
-        })
-        .on('click', '.a_delete_marker', function(ev){
-            $(ev.target).closest("tr").remove();
-            update_markers();
-            return false;
-        })
-        .on('change', '.marker_input', function(ev){
-            update_markers();
             return false;
         })
         .on('click', '.a_remove_attribute', function (ev) {
@@ -174,28 +216,6 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
             let attribute_name = map_attribute_label_value[attribute_token]
             attributes_contianer.append("<li data-attribute_token='" + attribute_token + "' class='small text-gray-700'>" + attribute_name + "&nbsp;(<a class='a_remove_attribute' title='Remove Metric' href='#'>x</a>)</li>");
         });
-
-
-        let markers_container = $("#div_modal_markers_container tbody");
-        markers_container.empty();
-
-        chart_data.markers.forEach(function(m){
-            let r = $("#tbl_template_marker tr").clone();
-            r.css("display", null);
-            $("input[name=marker_date]", r).val(m.date);
-            $("input[name=marker_text]", r).val(m.text);
-            markers_container.append(r);
-        });
-
-        window.clearInterval(window.INTERVAL_MARKER_HANDLER);
-        window.INTERVAL_MARKER_HANDLER = window.setInterval(function(){
-            let empty_dates = $("#div_modal_markers_container input[name=marker_date]").filter(function(idx, d){
-                return $(d).val().length === 0;
-            });
-            if (empty_dates.length === 0){
-                markers_container.append($("#tbl_template_marker tr").clone().css("display", null));
-            }
-        }, 100);
     }
 
     function build_charts_url(charts) {
@@ -212,6 +232,11 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
             qs_parts.push("date_to=" + page_model.latest_date);
         }
 
+        page_model.markers.forEach(function (m) {
+            if (m.date.length > 0){
+                qs_parts.push("md=" + m.date + "~" + m.text);
+            }
+        });
 
         charts.forEach(function (chart_data, idx) {
             let suffix = idx === 0 ? "" : "" + idx;
@@ -224,11 +249,6 @@ function covid_tracker_form(page_model, avail_locations, avail_attributes) {
             });
             chart_data.attributes.forEach(function (a) {
                 qs_parts.push("attr" + suffix + "=" + a);
-            });
-            chart_data.markers.forEach(function (m) {
-                if (m.date.length > 0){
-                    qs_parts.push("md" + suffix + "=" + m.date + "~" + m.text);
-                }
             });
             console.log("qs_parts", qs_parts);
         });
