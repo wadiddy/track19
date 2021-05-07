@@ -34,7 +34,7 @@
         "jquery": "3.5.1",
         "jquery.easing": "^1.4.1",
         "source": "0.0.3",
-        "underscore": "1.10.2",
+        "underscore": "1.12.1",
         "vinyl-source-stream": "2.0.0"
     },
     "devDependencies": {
